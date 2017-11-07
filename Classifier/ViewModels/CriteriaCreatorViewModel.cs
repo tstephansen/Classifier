@@ -65,42 +65,28 @@ namespace Classifier.ViewModels
             CreateCriteriaFromImage(FilePath);
         }
 
+        /// <summary>
+        /// Rectangle location is upper left corner.
+        /// </summary>
+        /// <param name="filePath"></param>
         public void CreateCriteriaFromImage(string filePath)
         {
+            var savePath = Path.Combine(Common.TempStorage, "criteria.png");
             using (var original = new Bitmap(filePath))
             {
-                var originalHeight = original.Height;
                 var originalWidth = original.Width;
-                var scaleY = PreviewImageHeight / originalHeight;
-                var scaleX = PreviewImageWidth / originalWidth;
-                var scaledPositionX = InitialPosition.X / scaleX;
-                var scaledPositionY = InitialPosition.Y / scaleY;
-                var scaledSizeX = (SelectionSize.Width / scaleX) - scaledPositionX;
-                var scaledSizeY = (SelectionSize.Height / scaleY) - scaledPositionY;
-                var scaledSize = new Size(Convert.ToInt32(scaledSizeX), Convert.ToInt32(scaledSizeY));
-                var positionX = Convert.ToInt32(scaledPositionX);
-                var positionY = Convert.ToInt32(scaledPositionY);
-                var savePath = Path.Combine(Common.TempStorage, "criteria.png");
-                var rect = new Rectangle(new Point(positionX, positionY), scaledSize);
+                var originalHeight = original.Height;
+                var scaleFactorX = PreviewImageWidth / originalWidth;
+                var scaleFactorY = PreviewImageHeight / originalHeight;
+                var userWidth = ReleasePosition.X - InitialPosition.X;
+                var userHeight = ReleasePosition.Y - InitialPosition.Y;
+                var scaledWidth = userWidth / scaleFactorX;
+                var scaledHeight = userHeight / scaleFactorY;
+                var scaledSize = new Size(Convert.ToInt32(scaledWidth), Convert.ToInt32(scaledHeight));
+                var startPoint = new Point(Convert.ToInt32(InitialPosition.X), Convert.ToInt32(InitialPosition.Y));
+                var rect = new Rectangle(startPoint, scaledSize);
                 var cropped = (Bitmap)original.Clone(rect, original.PixelFormat);
                 cropped.Save(savePath);
-
-                //var dpW = Convert.ToInt32(original.Width / 3.06);
-                //var dpH = Convert.ToInt32(original.Height / 6.6);
-                //var dpX = Convert.ToInt32(original.Width / 31.19);
-                //var dpY = Convert.ToInt32(original.Height / 18.48);
-                //var dpPoint = new Point(dpX, dpY);
-                //var dpSize = new Size(dpW, dpH);
-                //// Header Dimensions
-                //var headX = Convert.ToInt32(original.Width / 3.05);
-                //var headY = Convert.ToInt32(original.Height / 12.57);
-                //var headW = Convert.ToInt32(original.Width / 2.8);
-                //var headerRect = new Rectangle(new Point(headX, headY), new Size(headW, dpH));
-                //var dpHarpRect = new Rectangle(dpPoint, dpSize);
-                //var dpHarpCropped = (Bitmap)original.Clone(dpHarpRect, original.PixelFormat);
-                //dpHarpCropped.Save(dpHarpTestPath, ImageFormat.Png);
-                //var headerCropped = (Bitmap)original.Clone(headerRect, original.PixelFormat);
-                //headerCropped.Save(headerTestPath, ImageFormat.Png);
             }
         }
         #endregion

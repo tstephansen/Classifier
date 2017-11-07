@@ -30,8 +30,28 @@
             <TextBox MinWidth="150" Text="{Binding CriteriaName}" />
             <Button Command="{Binding SaveCriteriaCommand}" Content="Save" />
         </StackPanel>
+        <md:Card Grid.Row="1"
+                 HorizontalAlignment="Center"
+                 VerticalAlignment="Center">
+            <Grid x:Name="ImageGrid"
+                  MouseDown="ImageGrid_MouseDown"
+                  MouseMove="ImageGrid_MouseMove"
+                  MouseUp="ImageGrid_MouseUp">
+                <Image x:Name="PreviewImage"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       Source="{Binding ImageSource}" />
+                <Canvas x:Name="SelectionCanvas">
+                    <Rectangle x:Name="CriteriaSelectionBox"
+                               Stroke="Red"
+                               StrokeThickness="1"
+                               Visibility="Collapsed" />
+                </Canvas>
+            </Grid>
+        </md:Card>
+        <!--
         <Grid x:Name="ImageGrid"
-              Grid.Row="1"
+              Grid.Row="2"
               MouseDown="ImageGrid_MouseDown"
               MouseMove="ImageGrid_MouseMove"
               MouseUp="ImageGrid_MouseUp">
@@ -50,5 +70,6 @@
                            Visibility="Collapsed" />
             </Canvas>
         </Grid>
+        -->
     </Grid>
 </UserControl>

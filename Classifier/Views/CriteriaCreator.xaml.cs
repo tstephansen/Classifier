@@ -36,14 +36,12 @@ namespace Classifier.Views
             {
                 _mouseDown = false;
                 ImageGrid.ReleaseMouseCapture();
-                _mouseUpPosition = e.GetPosition(ImageGrid);
+                _mouseUpPosition = e.GetPosition(PreviewImage);
                 ((CriteriaCreatorViewModel)DataContext).PreviewImageWidth = PreviewImage.ActualWidth;
                 ((CriteriaCreatorViewModel)DataContext).PreviewImageHeight = PreviewImage.ActualHeight;
                 ((CriteriaCreatorViewModel)DataContext).InitialPosition = _mouseDownPosition;
                 ((CriteriaCreatorViewModel)DataContext).ReleasePosition = _mouseUpPosition;
                 ((CriteriaCreatorViewModel)DataContext).SelectionSize = new System.Drawing.Size(Convert.ToInt32(CriteriaSelectionBox.Width), Convert.ToInt32(CriteriaSelectionBox.Height));
-                //System.Console.WriteLine($"Criteria Box: {CriteriaSelectionBox.Width} {CriteriaSelectionBox.Height}");
-                //System.Console.WriteLine($"Original: {_mouseDownPosition}   Up: {_mouseUpPosition}");
             }
             catch (Exception ex)
             {
@@ -54,7 +52,7 @@ namespace Classifier.Views
         private void ImageGrid_MouseDown(object sender, MouseButtonEventArgs e)
         {
             _mouseDown = true;
-            _mouseDownPosition = e.GetPosition(ImageGrid);
+            _mouseUpPosition = e.GetPosition(PreviewImage);
             ImageGrid.CaptureMouse();
 
             Canvas.SetLeft(CriteriaSelectionBox, _mouseDownPosition.X);
@@ -68,8 +66,8 @@ namespace Classifier.Views
         {
             if (_mouseDown)
             {
-                var mousePosition = e.GetPosition(ImageGrid);
-                if(_mouseDownPosition.X < mousePosition.X)
+                var mousePosition = e.GetPosition(PreviewImage);
+                if (_mouseDownPosition.X < mousePosition.X)
                 {
                     Canvas.SetLeft(CriteriaSelectionBox, _mouseDownPosition.X);
                     CriteriaSelectionBox.Width = mousePosition.X - _mouseDownPosition.X;
