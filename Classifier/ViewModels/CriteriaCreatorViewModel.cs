@@ -1,8 +1,10 @@
 ﻿using Classifier.Core;
-using Classifier.Models;
+using Classifier.Data;
 using LandmarkDevs.Core.Infrastructure;
+using LandmarkDevs.Core.Shared;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -17,29 +19,38 @@ namespace Classifier.ViewModels
         {
             LoadImageCommand = new RelayCommand(LoadImage);
             CreateCriteriaCommand = new RelayCommand(CreateCriteria);
-            DocumentTypeList = new List<DocumentTypes>
-            {
-                new DocumentTypes
-                {
-                    Id = 1,
-                    DocumentType = "YCA Factory Calibration Certificate",
-                    Criteria = new List<DocumentCriteria>()
-                },
-                new DocumentTypes
-                {
-                    Id = 2,
-                    DocumentType = "M1100UT",
-                    Criteria = new List<DocumentCriteria>()
-                }
-            };
+            RefreshDocTypesCommand = new RelayCommand(RefreshDocTypes);
+            SavedDialogOpen = false;
+            RefreshDocTypes();
         }
 
         #region Commands
         public IRelayCommand LoadImageCommand { get; }
         public IRelayCommand CreateCriteriaCommand { get; }
+        public IRelayCommand RefreshDocTypesCommand { get; }
+        public IRelayCommand CloseDialogCommand { get; }
         #endregion
 
         #region Methods
+        public void CloseDialog()
+        {
+            SavedDialogOpen = false;
+        }
+
+        public void RefreshDocTypes()
+        {
+            using(var context = new DataContext())
+            {
+                var docTypes = context.DocumentTypes.ToList();
+                DocumentTypeList = new ObservableCollection<DocumentTypes>(docTypes);
+                foreach (var type in DocumentTypeList)
+                {
+                    var resultPath = Path.Combine(Results, type.DocumentType);
+                    if (!Directory.Exists(resultPath)) Directory.CreateDirectory(resultPath);
+                }
+            }
+        }
+
         public void LoadImage()
         {
             var files = Common.BrowseForFiles("PNG (*.png)|*.png");
@@ -58,20 +69,36 @@ namespace Classifier.ViewModels
 
         public void CreateCriteria()
         {
-            //if(SelectedDocumentType == null || CriteriaName == string.Empty)
-            //{
-            //    return;
-            //}
-            CreateCriteriaFromImage(FilePath);
+            if (SelectedDocumentType == null || CriteriaName == string.Empty)
+            {
+                return;
+            }
+            var saved = CreateCriteriaFromImage(FilePath);
+            if (saved < 1)
+            {
+                SavedDialogTitle = "Error";
+                SavedDialogText = "There was an error saving the criteria.";
+                SavedDialogOpen = true;
+            }
+            else
+            {
+                ImageSource = null;
+                CriteriaName = null;
+                SavedDialogTitle = "Saved";
+                SavedDialogText = "The criteria was saved successfully";
+                SavedDialogOpen = true;
+            }
         }
 
         /// <summary>
         /// Rectangle location is upper left corner.
         /// </summary>
         /// <param name="filePath"></param>
-        public void CreateCriteriaFromImage(string filePath)
+        public int CreateCriteriaFromImage(string filePath)
         {
+            var saved = 0;
             var savePath = Path.Combine(Common.TempStorage, "criteria.png");
+            if (File.Exists(savePath)) File.Delete(savePath);
             using (var original = new Bitmap(filePath))
             {
                 var originalWidth = original.Width;
@@ -80,18 +107,73 @@ namespace Classifier.ViewModels
                 var scaleFactorY = PreviewImageHeight / originalHeight;
                 var userWidth = ReleasePosition.X - InitialPosition.X;
                 var userHeight = ReleasePosition.Y - InitialPosition.Y;
+                var scaledPositionX = InitialPosition.X / scaleFactorX;
+                var scaledPositionY = InitialPosition.Y / scaleFactorY;
                 var scaledWidth = userWidth / scaleFactorX;
                 var scaledHeight = userHeight / scaleFactorY;
                 var scaledSize = new Size(Convert.ToInt32(scaledWidth), Convert.ToInt32(scaledHeight));
-                var startPoint = new Point(Convert.ToInt32(InitialPosition.X), Convert.ToInt32(InitialPosition.Y));
+                var startPoint = new Point(Convert.ToInt32(scaledPositionX), Convert.ToInt32(scaledPositionY));
+                var expandedWidth = Convert.ToInt32(scaledWidth + 80);
+                var expandedHeight = Convert.ToInt32(scaledHeight + 80);
+                var expandedX = startPoint.X - 40;
+                var expandedY = startPoint.Y - 40;
+                if (expandedX < 0) expandedX = 0;
+                if (expandedY < 0) expandedY = 0;
                 var rect = new Rectangle(startPoint, scaledSize);
                 var cropped = (Bitmap)original.Clone(rect, original.PixelFormat);
                 cropped.Save(savePath);
+                var imageString = Common.CreateStringFromImage(savePath);
+                saved = AddCriteriaToDatabase(imageString, expandedWidth, expandedHeight, expandedX, expandedY, originalWidth, originalHeight);
+            }
+            if (File.Exists(savePath)) File.Delete(savePath);
+            return saved;
+        }
+
+        public int AddCriteriaToDatabase(string imageBytes, int expandedWidth, int expandedHeight, int expandedX, int expandedY, int origW, int origH)
+        {
+            using(var context = new DataContext())
+            {
+                context.DocumentCriteria.Add(new DocumentCriteria
+                {
+                    CriteriaName = CriteriaName,
+                    DocumentTypeId = SelectedDocumentType.Id,
+                    CriteriaBytes = imageBytes,
+                    PositionX = expandedX,
+                    PositionY = expandedY,
+                    Width = expandedWidth,
+                    Height = expandedHeight,
+                    BaseWidth = origW,
+                    BaseHeight = origH,
+                    MatchThreshold = 74,
+                    Id = GuidGenerator.GenerateTimeBasedGuid()
+                });
+                return context.SaveChanges();
             }
         }
         #endregion
 
         #region Fields
+        public bool SavedDialogOpen
+        {
+            get => _savedDialogOpen;
+            set => Set(ref _savedDialogOpen, value);
+        }
+        private bool _savedDialogOpen;
+
+        public string SavedDialogText
+        {
+            get => _savedDialogText;
+            set => Set(ref _savedDialogText, value);
+        }
+        private string _savedDialogText;
+
+        public string SavedDialogTitle
+        {
+            get => _savedDialogTitle;
+            set => Set(ref _savedDialogTitle, value);
+        }
+        private string _savedDialogTitle;
+
         public string FilePath
         {
             get => _filePath;
@@ -134,12 +216,12 @@ namespace Classifier.ViewModels
         }
         private Size _selectionSize;
 
-        public List<DocumentTypes> DocumentTypeList
+        public ObservableCollection<DocumentTypes> DocumentTypeList
         {
             get => _documentTypeList;
             set => Set(ref _documentTypeList, value);
         }
-        private List<DocumentTypes> _documentTypeList;
+        private ObservableCollection<DocumentTypes> _documentTypeList;
 
         public DocumentTypes SelectedDocumentType
         {
@@ -164,6 +246,7 @@ namespace Classifier.ViewModels
 
         public double PreviewImageWidth { get; set; }
         public double PreviewImageHeight { get; set; }
+        public string Results = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\DocumentClassifier\\Results";
         #endregion
     }
 }

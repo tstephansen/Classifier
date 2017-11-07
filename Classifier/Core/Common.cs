@@ -65,6 +65,20 @@ namespace Classifier.Core
             return (Bitmap)image;
         }
 
+        public static string CreateStringFromImage(string filePath)
+        {
+            using (Image image = Image.FromFile(filePath))
+            {
+                using (MemoryStream m = new MemoryStream())
+                {
+                    image.Save(m, image.RawFormat);
+                    var imageBytes = m.ToArray();
+                    var base64String = Convert.ToBase64String(imageBytes);
+                    return base64String;
+                }
+            }
+        }
+
         public static string AppStorage = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\DocumentClassifier";
         public static string TempStorage = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\DocumentClassifier\\temp";
         public static string PdfPath = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\DocumentClassifier\\PDFs";

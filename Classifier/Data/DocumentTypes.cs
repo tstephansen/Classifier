@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Classifier.Models
+namespace Classifier.Data
 {
     public class DocumentTypes
     {
@@ -13,7 +13,7 @@ namespace Classifier.Models
             Criteria = new List<DocumentCriteria>();
         }
 
-        public long Id { get; set; }
+        public Guid Id { get; set; }
         public string DocumentType { get; set; }
         public virtual ICollection<DocumentCriteria> Criteria { get; set; }
     }

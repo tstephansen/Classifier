@@ -24,6 +24,12 @@ namespace Classifier.Views
         public CriteriaCreator()
         {
             InitializeComponent();
+            PreviewImage.DataContextChanged += PreviewImage_DataContextChanged;
+        }
+
+        private void PreviewImage_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            CriteriaSelectionBox.Visibility = Visibility.Collapsed;
         }
 
         private bool _mouseDown = false;
@@ -52,9 +58,9 @@ namespace Classifier.Views
         private void ImageGrid_MouseDown(object sender, MouseButtonEventArgs e)
         {
             _mouseDown = true;
-            _mouseUpPosition = e.GetPosition(PreviewImage);
+            _mouseDownPosition = e.GetPosition(ImageGrid);
             ImageGrid.CaptureMouse();
-
+            Console.WriteLine($"MouseDown Position: {_mouseDownPosition}");
             Canvas.SetLeft(CriteriaSelectionBox, _mouseDownPosition.X);
             Canvas.SetTop(CriteriaSelectionBox, _mouseDownPosition.Y);
             CriteriaSelectionBox.Width = 0;
@@ -66,7 +72,7 @@ namespace Classifier.Views
         {
             if (_mouseDown)
             {
-                var mousePosition = e.GetPosition(PreviewImage);
+                var mousePosition = e.GetPosition(ImageGrid);
                 if (_mouseDownPosition.X < mousePosition.X)
                 {
                     Canvas.SetLeft(CriteriaSelectionBox, _mouseDownPosition.X);

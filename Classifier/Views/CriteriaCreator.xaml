@@ -18,9 +18,10 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <StackPanel Orientation="Horizontal">
+        <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
             <Button Command="{Binding LoadImageCommand}" Content="Browse" />
             <Button Command="{Binding CreateCriteriaCommand}" Content="Create Criteria" />
+            <Button Command="{Binding RefreshDocTypesCommand}" Content="Refresh Doc. Types" />
             <Label Margin="10,0,0,0" Content="Document Type:" />
             <ComboBox MinWidth="150"
                       DisplayMemberPath="DocumentType"
@@ -28,7 +29,6 @@
                       SelectedItem="{Binding SelectedDocumentType}" />
             <Label Margin="10,0,0,0" Content="Criteria Name:" />
             <TextBox MinWidth="150" Text="{Binding CriteriaName}" />
-            <Button Command="{Binding SaveCriteriaCommand}" Content="Save" />
         </StackPanel>
         <md:Card Grid.Row="1"
                  HorizontalAlignment="Center"
@@ -71,5 +71,29 @@
             </Canvas>
         </Grid>
         -->
+        <!--<md:DialogHost Grid.RowSpan="2"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       IsOpen="{Binding SavedDialogOpen}">
+            <Border MinWidth="256"
+                    MinHeight="256"
+                    BorderBrush="{DynamicResource PrimaryHueMidBrush}"
+                    BorderThickness="1"
+                    ClipToBounds="True">
+                <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <TextBlock HorizontalAlignment="Left" Text="{Binding SavedDialogTitle}" />
+                    <StackPanel Grid.Row="1"
+                                MinWidth="120"
+                                HorizontalAlignment="Center">
+                        <Label HorizontalAlignment="Left" Content="{Binding SavedDialogText}" />
+                        <Button Command="{Binding CloseDialogCommand}" Content="Ok" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </md:DialogHost>-->
     </Grid>
 </UserControl>
