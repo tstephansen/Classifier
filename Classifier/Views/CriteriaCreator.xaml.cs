@@ -32,14 +32,23 @@ namespace Classifier.Views
 
         private void ImageGrid_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            _mouseDown = false;
-            ImageGrid.ReleaseMouseCapture();
-            _mouseUpPosition = e.GetPosition(ImageGrid);
-            ((CriteriaCreatorViewModel)DataContext).InitialPosition = _mouseDownPosition;
-            ((CriteriaCreatorViewModel)DataContext).ReleasePosition = _mouseUpPosition;
-            ((CriteriaCreatorViewModel)DataContext).SelectionSize = new System.Drawing.Size(Convert.ToInt32(CriteriaSelectionBox.Width), Convert.ToInt32(CriteriaSelectionBox.Height));
-            //System.Console.WriteLine($"Criteria Box: {CriteriaSelectionBox.Width} {CriteriaSelectionBox.Height}");
-            //System.Console.WriteLine($"Original: {_mouseDownPosition}   Up: {_mouseUpPosition}");
+            try
+            {
+                _mouseDown = false;
+                ImageGrid.ReleaseMouseCapture();
+                _mouseUpPosition = e.GetPosition(ImageGrid);
+                ((CriteriaCreatorViewModel)DataContext).PreviewImageWidth = PreviewImage.ActualWidth;
+                ((CriteriaCreatorViewModel)DataContext).PreviewImageHeight = PreviewImage.ActualHeight;
+                ((CriteriaCreatorViewModel)DataContext).InitialPosition = _mouseDownPosition;
+                ((CriteriaCreatorViewModel)DataContext).ReleasePosition = _mouseUpPosition;
+                ((CriteriaCreatorViewModel)DataContext).SelectionSize = new System.Drawing.Size(Convert.ToInt32(CriteriaSelectionBox.Width), Convert.ToInt32(CriteriaSelectionBox.Height));
+                //System.Console.WriteLine($"Criteria Box: {CriteriaSelectionBox.Width} {CriteriaSelectionBox.Height}");
+                //System.Console.WriteLine($"Original: {_mouseDownPosition}   Up: {_mouseUpPosition}");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex.Message.Trim());
+            }
         }
 
         private void ImageGrid_MouseDown(object sender, MouseButtonEventArgs e)

@@ -13,7 +13,7 @@ namespace Classifier.Models
             Criteria = new List<DocumentCriteria>();
         }
 
-        public Guid Id { get; set; }
+        public long Id { get; set; }
         public string DocumentType { get; set; }
         public virtual ICollection<DocumentCriteria> Criteria { get; set; }
     }

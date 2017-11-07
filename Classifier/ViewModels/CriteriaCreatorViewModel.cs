@@ -16,10 +16,27 @@ namespace Classifier.ViewModels
         public CriteriaCreatorViewModel()
         {
             LoadImageCommand = new RelayCommand(LoadImage);
+            CreateCriteriaCommand = new RelayCommand(CreateCriteria);
+            DocumentTypeList = new List<DocumentTypes>
+            {
+                new DocumentTypes
+                {
+                    Id = 1,
+                    DocumentType = "YCA Factory Calibration Certificate",
+                    Criteria = new List<DocumentCriteria>()
+                },
+                new DocumentTypes
+                {
+                    Id = 2,
+                    DocumentType = "M1100UT",
+                    Criteria = new List<DocumentCriteria>()
+                }
+            };
         }
 
         #region Commands
         public IRelayCommand LoadImageCommand { get; }
+        public IRelayCommand CreateCriteriaCommand { get; }
         #endregion
 
         #region Methods
@@ -41,10 +58,10 @@ namespace Classifier.ViewModels
 
         public void CreateCriteria()
         {
-            if(InitialPosition == null || ReleasePosition == null || SelectedDocumentType == null || CriteriaName == string.Empty)
-            {
-                return;
-            }
+            //if(SelectedDocumentType == null || CriteriaName == string.Empty)
+            //{
+            //    return;
+            //}
             CreateCriteriaFromImage(FilePath);
         }
 
@@ -52,8 +69,19 @@ namespace Classifier.ViewModels
         {
             using (var original = new Bitmap(filePath))
             {
+                var originalHeight = original.Height;
+                var originalWidth = original.Width;
+                var scaleY = PreviewImageHeight / originalHeight;
+                var scaleX = PreviewImageWidth / originalWidth;
+                var scaledPositionX = InitialPosition.X / scaleX;
+                var scaledPositionY = InitialPosition.Y / scaleY;
+                var scaledSizeX = (SelectionSize.Width / scaleX) - scaledPositionX;
+                var scaledSizeY = (SelectionSize.Height / scaleY) - scaledPositionY;
+                var scaledSize = new Size(Convert.ToInt32(scaledSizeX), Convert.ToInt32(scaledSizeY));
+                var positionX = Convert.ToInt32(scaledPositionX);
+                var positionY = Convert.ToInt32(scaledPositionY);
                 var savePath = Path.Combine(Common.TempStorage, "criteria.png");
-                var rect = new Rectangle(new Point(Convert.ToInt32(InitialPosition.X), Convert.ToInt32(InitialPosition.Y)), SelectionSize);
+                var rect = new Rectangle(new Point(positionX, positionY), scaledSize);
                 var cropped = (Bitmap)original.Clone(rect, original.PixelFormat);
                 cropped.Save(savePath);
 
@@ -147,6 +175,9 @@ namespace Classifier.ViewModels
             set => Set(ref _selectionLocation, value);
         }
         private Point _selectionLocation;
+
+        public double PreviewImageWidth { get; set; }
+        public double PreviewImageHeight { get; set; }
         #endregion
     }
 }

@@ -23,6 +23,7 @@
             <Button Command="{Binding CreateCriteriaCommand}" Content="Create Criteria" />
             <Label Margin="10,0,0,0" Content="Document Type:" />
             <ComboBox MinWidth="150"
+                      DisplayMemberPath="DocumentType"
                       ItemsSource="{Binding DocumentTypeList}"
                       SelectedItem="{Binding SelectedDocumentType}" />
             <Label Margin="10,0,0,0" Content="Criteria Name:" />
@@ -37,7 +38,8 @@
             <md:Card HorizontalAlignment="Center"
                      VerticalAlignment="Center"
                      md:ShadowAssist.ShadowDepth="Depth3">
-                <Image HorizontalAlignment="Center"
+                <Image x:Name="PreviewImage"
+                       HorizontalAlignment="Center"
                        VerticalAlignment="Center"
                        Source="{Binding ImageSource}" />
             </md:Card>
