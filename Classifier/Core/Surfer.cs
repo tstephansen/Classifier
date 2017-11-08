@@ -17,7 +17,7 @@ using Emgu.CV.XFeatures2D;
 
 namespace Classifier.Core
 {
-    public static class SurfDrawMatches
+    public static class Surfer
     {
         public static void FindMatch(Mat modelImage, Mat observedImage, out long matchTime, out VectorOfKeyPoint modelKeyPoints, out VectorOfKeyPoint observedKeyPoints, VectorOfVectorOfDMatch matches, out Mat mask, out Mat homography)
         {
@@ -119,7 +119,7 @@ namespace Classifier.Core
         /// <param name="observedImage">The observed image</param>
         /// <param name="matchTime">The output total time for computing the homography matrix.</param>
         /// <returns>The model image and observed image, the matched features and homography projection.</returns>
-        public static Mat Draw(Mat modelImage, Mat observedImage, out long matchTime)
+        public static Mat Classify(Mat modelImage, Mat observedImage, out long matchTime)
         {
             Mat homography;
             VectorOfKeyPoint modelKeyPoints;
@@ -136,35 +136,70 @@ namespace Classifier.Core
                 //   matches, result, new MCvScalar(255, 255, 255), new MCvScalar(255, 255, 255), mask);
                 Features2DToolbox.DrawMatches(modelImage, modelKeyPoints, observedImage, observedKeyPoints,
                    matches, result, new MCvScalar(0, 0, 0), new MCvScalar(0, 0, 0), mask);
-
-                #region draw the projected region on the image
-
-                if (homography != null)
-                {
-                    //draw a rectangle along the projected model
-                    Rectangle rect = new Rectangle(Point.Empty, modelImage.Size);
-                    PointF[] pts = new PointF[]
-                    {
-                  new PointF(rect.Left, rect.Bottom),
-                  new PointF(rect.Right, rect.Bottom),
-                  new PointF(rect.Right, rect.Top),
-                  new PointF(rect.Left, rect.Top)
-                    };
-                    pts = CvInvoke.PerspectiveTransform(pts, homography);
-
-                    Point[] points = Array.ConvertAll<PointF, Point>(pts, Point.Round);
-                    using (VectorOfPoint vp = new VectorOfPoint(points))
-                    {
-                        CvInvoke.Polylines(result, vp, true, new MCvScalar(255, 0, 0, 255), 5);
-                    }
-
-                }
-
-                #endregion
-
+                Draw(homography, result, modelImage);
                 return result;
 
             }
+        }
+
+
+        public static int DetermineMatch(Mat modelImage, Mat observedImage, out long matchTime)
+        {
+            Mat homography;
+            VectorOfKeyPoint modelKeyPoints;
+            VectorOfKeyPoint observedKeyPoints;
+            using (VectorOfVectorOfDMatch matches = new VectorOfVectorOfDMatch())
+            {
+                Mat result = new Mat();
+                Mat mask;
+                FindMatch(modelImage, observedImage, out matchTime, out modelKeyPoints, out observedKeyPoints, matches,
+                   out mask, out homography);
+                //FindMatch(modelImage, observedImage, out matchTime, out modelKeyPoints, out observedKeyPoints, matches,
+                //   out mask, out homography, uniquenessThreshold, k);
+                Features2DToolbox.DrawMatches(modelImage, modelKeyPoints, observedImage, observedKeyPoints, matches, result, new MCvScalar(0, 0, 0), new MCvScalar(0, 0, 0), mask);
+                Matrix<Byte> matchMatrix = new Matrix<Byte>(mask.Rows, mask.Cols);
+                mask.CopyTo(matchMatrix);
+                var totalMatches = CountMatches(matchMatrix);
+                return totalMatches;
+            }
+        }
+
+        public static int CountMatches(Matrix<byte> mask)
+        {
+            var matched = mask.ManagedArray;
+            var list = matched.OfType<byte>().ToList();
+            var count = list.Count(a => a.Equals(1));
+            return count;
+        }
+
+        public static void Draw(Mat homography, Mat result, Mat modelImage)
+        {
+            #region draw the projected region on the image
+
+            if (homography != null)
+            {
+                //draw a rectangle along the projected model
+                var rect = new Rectangle(Point.Empty, modelImage.Size);
+                var pts = new PointF[]
+                {
+                      new PointF(rect.Left, rect.Bottom),
+                      new PointF(rect.Right, rect.Bottom),
+                      new PointF(rect.Right, rect.Top),
+                      new PointF(rect.Left, rect.Top)
+                };
+                pts = CvInvoke.PerspectiveTransform(pts, homography);
+
+#if NETFX_CORE
+                    Point[] points = Extensions.ConvertAll<PointF, Point>(pts, Point.Round);
+#else
+                Point[] points = Array.ConvertAll<PointF, Point>(pts, Point.Round);
+#endif
+                using (VectorOfPoint vp = new VectorOfPoint(points))
+                {
+                    CvInvoke.Polylines(result, vp, true, new MCvScalar(255, 0, 0, 255), 5);
+                }
+            }
+            #endregion
         }
     }
 }

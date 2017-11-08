@@ -158,6 +158,12 @@
     <Reference Include="Microsoft.Practices.ServiceLocation, Version=1.3.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\CommonServiceLocator.1.3\lib\portable-net4+sl5+netcore45+wpa81+wp8\Microsoft.Practices.ServiceLocation.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.WindowsAPICodePack, Version=1.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.WindowsAPICodePack.Core.1.1.0\lib\Microsoft.WindowsAPICodePack.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.WindowsAPICodePack.Shell, Version=1.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.WindowsAPICodePack.Shell.1.1.0\lib\Microsoft.WindowsAPICodePack.Shell.dll</HintPath>
+    </Reference>
     <Reference Include="MoreLinq, Version=2.8.21218.0, Culture=neutral, PublicKeyToken=384d532d7e88985d, processorArchitecture=MSIL">
       <HintPath>..\packages\morelinq.2.8.0\lib\net40\MoreLinq.dll</HintPath>
     </Reference>
@@ -314,6 +320,7 @@
     <Compile Include="Core\Common.cs" />
     <Compile Include="Core\StorageManager.cs" />
     <Compile Include="Core\Surfer.cs" />
+    <Compile Include="Core\TestGround.cs" />
     <Compile Include="Data\DataContext.cs" />
     <Compile Include="Data\DocumentCriteria.cs" />
     <Compile Include="Data\DocumentTypes.cs" />
@@ -343,6 +350,7 @@
     <Compile Include="ViewModels\HelpersViewModel.cs" />
     <Compile Include="ViewModels\MainWindowViewModel.cs" />
     <Compile Include="ViewModels\ImageResizerViewModel.cs" />
+    <Compile Include="ViewModels\TrainingViewModel.cs" />
     <Compile Include="Views\Classify.xaml.cs">
       <DependentUpon>Classify.xaml</DependentUpon>
     </Compile>
@@ -357,6 +365,9 @@
     </Compile>
     <Compile Include="Views\ImageResizer.xaml.cs">
       <DependentUpon>ImageResizer.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Training.xaml.cs">
+      <DependentUpon>Training.xaml</DependentUpon>
     </Compile>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -387,6 +398,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\ImageResizer.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\Training.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

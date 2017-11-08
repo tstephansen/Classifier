@@ -35,11 +35,13 @@ namespace Classifier.ViewModels
             PdfImages = new Dictionary<string, string>();
             BrowseForFilesCommand = new RelayCommand(BrowseForFiles);
             RemoveFileCommand = new RelayCommand(RemoveSelectedFile);
-            ClassifyCommand = new RelayCommand(async () => await ClassifyDocumentsAsync());
+            //ClassifyCommand = new RelayCommand(async () => await ClassifyDocumentsAsync());
+            ClassifyCommand = new RelayCommand(async () => await ProcessDocumentsAsync());
             BrowseForSpreadsheetCommand = new RelayCommand(BrowseForSpreadsheet);
             UniquenessThreshold = 0.60;
             KNearest = 2;
             ViewResults = false;
+            Scores = new List<ImageScores>();
         }
 
         #region Commands
@@ -53,7 +55,7 @@ namespace Classifier.ViewModels
         public void BrowseForFiles()
         {
             SelectedFile = null;
-            var filesDialog = Common.BrowseForFiles(true);
+            var filesDialog = Common.BrowseForFiles(true, "PDF (*.pdf)|*.pdf|Excel (*.xlsx)|*.xlsx");
             if (filesDialog.ShowDialog() != true)
                 return;
             PdfFiles = new ObservableCollection<string>(filesDialog.FileNames);
@@ -61,7 +63,6 @@ namespace Classifier.ViewModels
 
         public void BrowseForSpreadsheet()
         {
-            //if (string.IsNullOrWhiteSpace(NamingSpreadsheetPath)) return;
             var file = Common.BrowseForFiles("XLSX (*.xlsx)|*.xlsx");
             if (file.ShowDialog() != true)
                 return;
@@ -78,18 +79,23 @@ namespace Classifier.ViewModels
             PdfFiles.Remove(SelectedFile);
             SelectedFile = null;
         }
-        
-        public async Task ClassifyDocumentsAsync()
+
+        public async Task ProcessDocumentsAsync()
         {
-            var useCustomNaming = false;
+            List<DocumentTypes> types = null;
+            List<DocumentCriteria> documentCriteria = null;
+            using (var context = new DataContext())
+            {
+                types = context.DocumentTypes.ToList();
+                documentCriteria = context.DocumentCriteria.ToList();
+            }
             if (!string.IsNullOrWhiteSpace(NamingSpreadsheetPath))
             {
-                useCustomNaming = true;
                 var spreadsheetDataTable = await Common.GetSpreadsheetDataTableAsync(NamingSpreadsheetPath, "Reference");
-                if(spreadsheetDataTable != null)
+                if (spreadsheetDataTable != null)
                 {
                     NamingModels = new List<FileNamingModel>();
-                    foreach(DataRow dr in spreadsheetDataTable.Rows)
+                    foreach (DataRow dr in spreadsheetDataTable.Rows)
                     {
                         var serial = string.Empty;
                         var tag = string.Empty;
@@ -102,39 +108,34 @@ namespace Classifier.ViewModels
                 }
             }
             await ConvertPdfsToImagesAsync();
-            using(var context = new DataContext())
+            await Common.CreateCriteriaFilesAsync(documentCriteria, types);
+            var criteriaDirectoryInfo = new DirectoryInfo(Common.CriteriaStorage);
+            var criteriaFiles = criteriaDirectoryInfo.GetFiles();
+            var tempDirectoryInfo = new DirectoryInfo(Common.TempStorage);
+            var files = tempDirectoryInfo.GetFiles();
+            foreach (var file in files)
             {
-                var types = context.DocumentTypes.ToList();
-                await CreateCriteriaFilesAsync(context, types);
-                var criteriaDirectoryInfo = new DirectoryInfo(Common.CriteriaStorage);
-                var criteriaFiles = criteriaDirectoryInfo.GetFiles();
-                var tempDirectoryInfo = new DirectoryInfo(Common.TempStorage);
-                var files = tempDirectoryInfo.GetFiles();
-                foreach (var file in files)
+                var criteriaMatches = types.Select(o => new CriteriaMatchModel
                 {
-                    var criteriaMatches = types.Select(o => new CriteriaMatchModel
-                        {
-                            DocumentType = o
-                        }).ToList();
-                    foreach (var criteriaFile in criteriaFiles)
-                    {
-                        var criteriaFileSplit = criteriaFile.Name.Split('-');
-                        var type = context.DocumentTypes.First(c => c.DocumentType == criteriaFileSplit[0]);
-                        var critName = criteriaFileSplit[1].Substring(0, criteriaFileSplit[1].Length - 4);
-                        var crit = context.DocumentCriteria.First(c => c.DocumentTypeId == type.Id && c.CriteriaName == critName);
-                        CreateImagePart(file.FullName, crit);
-                        var cropPath = Path.Combine(Common.TempStorage, "cropped.png");
-                        var matches = Classify(criteriaFile.FullName, cropPath);
-                        var existingModel = criteriaMatches.First(c => c.DocumentType == type);
-                        existingModel.Matches += matches;
-                        existingModel.PdfFile = file.FullName;
-                    }
-                    var matchedCriteria = criteriaMatches.First(c => c.Matches == criteriaMatches.Max(p => p.Matches));
-                    Console.WriteLine($@"Total Matches: {matchedCriteria.Matches}");
-                    if (matchedCriteria.Matches > 100)
-                    {
-                        ExtractPageFromPdf(file, matchedCriteria.DocumentType.DocumentType, NamingModels);
-                    }
+                    DocumentType = o
+                }).ToList();
+                foreach (var criteriaFile in criteriaFiles)
+                {
+                    var criteriaFileSplit = criteriaFile.Name.Split('-');
+                    var type = types.First(c => c.DocumentType == criteriaFileSplit[0]);
+                    var cropPath = file.FullName;
+                    //var matches = Classify(criteriaFile.FullName, cropPath);
+                    var score = Classify(criteriaFile.FullName, cropPath);
+                    var existingModel = criteriaMatches.First(c => c.DocumentType == type);
+                    //existingModel.Matches += matches;
+                    existingModel.Score += score;
+                    existingModel.PdfFile = file.FullName;
+                }
+                var matchedCriteria = criteriaMatches.First(c => c.Score == criteriaMatches.Max(p => p.Score));
+                Console.WriteLine($@"Total Matches: {matchedCriteria.Score}");
+                if (matchedCriteria.Matches > 50)
+                {
+                    ExtractPageFromPdf(file, matchedCriteria.DocumentType.DocumentType, NamingModels);
                 }
             }
             System.Windows.Application.Current.Dispatcher.Invoke(() =>
@@ -142,6 +143,106 @@ namespace Classifier.ViewModels
                 System.Windows.MessageBox.Show("Completed!");
             });
         }
+
+        public long Classify(string criteriaPath, string obsPath)
+        {
+            var matches = 0;
+            var score = 0L;
+            using (var modelImage = CvInvoke.Imread(criteriaPath, ImreadModes.Grayscale))
+            {
+                using (var observedImage = CvInvoke.Imread(obsPath))
+                {
+                    if (UseSurf)
+                    {
+                        matches = Surfer.DetermineMatch(modelImage, observedImage, out _);
+                        if (!ViewResults) return matches;
+                        var result = Surfer.Classify(modelImage, observedImage, out _);
+                        ImageViewer.Show(result);
+                    }
+                    else
+                    {
+                        score = Classifier.ProcessImage(modelImage, observedImage, UniquenessThreshold, KNearest);
+                        if (!ViewResults) return score;
+                        var result = Classifier.ProcessImageAndShowResult(modelImage, observedImage, UniquenessThreshold, KNearest);
+                        ImageViewer.Show(result);
+                        //System.Windows.MessageBox.Show($"Score: {score}");
+                        //matches = Classifier.DetermineMatch(modelImage, observedImage, UniquenessThreshold, KNearest, out _);
+                        //if (!ViewResults) return matches;
+                        //var result = Classifier.Classify(modelImage, observedImage, UniquenessThreshold, KNearest, out _);
+                        //ImageViewer.Show(result);
+                    }
+                }
+            }
+            return score;
+        }
+
+        //public async Task ClassifyDocumentsAsync()
+        //{
+        //    List<DocumentTypes> types = null;
+        //    List<DocumentCriteria> documentCriteria = null;
+        //    using (var context = new DataContext())
+        //    {
+        //        types = context.DocumentTypes.ToList();
+        //        documentCriteria = context.DocumentCriteria.ToList();
+        //    }
+        //    if (!string.IsNullOrWhiteSpace(NamingSpreadsheetPath))
+        //    {
+        //        var spreadsheetDataTable = await Common.GetSpreadsheetDataTableAsync(NamingSpreadsheetPath, "Reference");
+        //        if(spreadsheetDataTable != null)
+        //        {
+        //            NamingModels = new List<FileNamingModel>();
+        //            foreach(DataRow dr in spreadsheetDataTable.Rows)
+        //            {
+        //                var serial = string.Empty;
+        //                var tag = string.Empty;
+        //                if (!string.IsNullOrWhiteSpace(dr["Serial"].ToString()))
+        //                    serial = dr["Serial"].ToString();
+        //                if (!string.IsNullOrWhiteSpace(dr["Tag"].ToString()))
+        //                    tag = dr["Tag"].ToString();
+        //                NamingModels.Add(new FileNamingModel { Serial = serial, Tag = tag });
+        //            }
+        //        }
+        //    }
+        //    await ConvertPdfsToImagesAsync();
+        //    //var types = context.DocumentTypes.ToList();
+        //    //await CreateCriteriaFilesAsync(context, types);
+        //    await CreateCriteriaFilesAsync(documentCriteria, types);
+        //    var criteriaDirectoryInfo = new DirectoryInfo(Common.CriteriaStorage);
+        //    var criteriaFiles = criteriaDirectoryInfo.GetFiles();
+        //    var tempDirectoryInfo = new DirectoryInfo(Common.TempStorage);
+        //    var files = tempDirectoryInfo.GetFiles();
+        //    foreach (var file in files)
+        //    {
+        //        var criteriaMatches = types.Select(o => new CriteriaMatchModel
+        //        {
+        //            DocumentType = o
+        //        }).ToList();
+        //        foreach (var criteriaFile in criteriaFiles)
+        //        {
+        //            var criteriaFileSplit = criteriaFile.Name.Split('-');
+        //            var type = types.First(c => c.DocumentType == criteriaFileSplit[0]);
+        //            var critName = criteriaFileSplit[1].Substring(0, criteriaFileSplit[1].Length - 4);
+        //            var crit = documentCriteria.First(c => c.DocumentTypeId == type.Id && c.CriteriaName == critName);
+        //            //CreateImagePart(file.FullName, crit);
+        //            //var cropPath = Path.Combine(Common.TempStorage, "cropped.png");
+        //            var cropPath = file.FullName;
+        //            var matches = Classify(criteriaFile.FullName, cropPath);
+        //            var existingModel = criteriaMatches.First(c => c.DocumentType == type);
+        //            existingModel.Matches += matches;
+        //            existingModel.PdfFile = file.FullName;
+        //        }
+        //        var matchedCriteria = criteriaMatches.First(c => c.Matches == criteriaMatches.Max(p => p.Matches));
+        //        Console.WriteLine($@"Total Matches: {matchedCriteria.Matches}");
+        //        if (matchedCriteria.Matches > 50)
+        //        {
+        //            ExtractPageFromPdf(file, matchedCriteria.DocumentType.DocumentType, NamingModels);
+        //        }
+        //    }
+        //    System.Windows.Application.Current.Dispatcher.Invoke(() =>
+        //    {
+        //        System.Windows.MessageBox.Show("Completed!");
+        //    });
+        //}
 
         public static void CreateImagePart(string filePath, DocumentCriteria criteria)
         {
@@ -153,8 +254,6 @@ namespace Classifier.ViewModels
                 var originalHeight = original.Height;
                 var positionX = criteria.PositionX;
                 var positionY = criteria.PositionY;
-                var width = criteria.Width;
-                var height = criteria.Height;
                 var scaleFactorX = 1.0;
                 var scaleFactorY = 1.0;
                 if ((criteria.BaseWidth != 0 && originalWidth != 0) && criteria.BaseWidth != originalWidth)
@@ -189,44 +288,7 @@ namespace Classifier.ViewModels
             return value;
         }
 
-        public int Classify(string criteriaPath, string obsPath)
-        {
-            var matches = 0;
-            using (var modelImage = CvInvoke.Imread(criteriaPath, ImreadModes.Grayscale))
-            {
-                using (var observedImage = CvInvoke.Imread(obsPath))
-                {
-                    matches = Classifier.DetermineMatch(modelImage, observedImage, UniquenessThreshold, KNearest, out _);
-                    if (!ViewResults) return matches;
-                    var result = Classifier.Classify(modelImage, observedImage, UniquenessThreshold, KNearest, out _);
-                    ImageViewer.Show(result);
-                }
-            }
-            return matches;
-        }
-
-        public static Task CreateCriteriaFilesAsync(DataContext context, List<DocumentTypes> types)
-        {
-            return Task.Run(() =>
-            {
-                var criteriaDirectoryInfo = new DirectoryInfo(Common.CriteriaStorage);
-                var files = criteriaDirectoryInfo.GetFiles();
-                foreach(var file in files)
-                {
-                    File.Delete(file.FullName);
-                }
-                foreach (var type in types)
-                {
-                    var criterion = context.DocumentCriteria.Where(c => c.DocumentTypeId == type.Id).ToList();
-                    foreach (var criteria in criterion)
-                    {
-                        var image = Common.ConvertStringToImage(criteria.CriteriaBytes);
-                        var imagePath = Path.Combine(Common.CriteriaStorage, $"{type.DocumentType}-{criteria.CriteriaName}.png");
-                        image.Save(imagePath);
-                    }
-                }
-            });
-        }
+        
 
         public void ExtractPageFromPdf(FileInfo file, string type, List<FileNamingModel> models = null)
         {
@@ -234,7 +296,6 @@ namespace Classifier.ViewModels
             if(models != null)
             {
                 var fileNameSplit = fileName.Split('.');
-                var len = fileNameSplit.Length;
                 var serialNumber = fileNameSplit[0];
                 var model = models.FirstOrDefault(c => c.Serial == serialNumber);
                 if(model != null)
@@ -255,7 +316,10 @@ namespace Classifier.ViewModels
                 var endIndex = page - 1;
                 document.ImportPageRange(loadedDocument, startIndex, endIndex);
                 var savePath = Path.Combine(resultPath, $"{fileName}.pdf");
-                if (File.Exists(savePath)) File.Delete(savePath);
+                if (File.Exists(savePath))
+                {
+                    savePath = Path.Combine(resultPath, $"{fileName}-1.pdf");
+                }
                 document.Save(savePath);
                 loadedDocument.Close(true);
                 document.Close(true);
@@ -273,7 +337,7 @@ namespace Classifier.ViewModels
             {
                 var files = new List<FileInfo>();
                 PdfFiles.ForEach(c => files.Add(new FileInfo(c)));
-                foreach (var file in files)
+                foreach (var file in files.Where(c=>c.Extension == ".pdf"))
                 {
                     viewer.Load(file.FullName);
                     var images = viewer.ExportAsImage(0, viewer.PageCount - 1);
@@ -291,6 +355,13 @@ namespace Classifier.ViewModels
         #endregion
 
         #region Fields
+        public List<ImageScores> Scores
+        {
+            get => _scores;
+            set => Set(ref _scores, value);
+        }
+        private List<ImageScores> _scores;
+
         public List<FileNamingModel> NamingModels { get; set; }
         public bool ClassifyEnabled
         {
@@ -348,6 +419,21 @@ namespace Classifier.ViewModels
             set => Set(ref _namingSpreadsheetPath, value);
         }
         private string _namingSpreadsheetPath;
+
+        public bool UseSurf
+        {
+            get => _useSurf;
+            set => Set(ref _useSurf, value);
+        }
+        private bool _useSurf;
         #endregion
+    }
+
+    public struct ImageScores
+    {
+        public string Path { get; set; }
+        public long Score { get; set; }
+        public string PdfFile { get; set; }
+        public string CriteriaFile { get; set; }
     }
 }

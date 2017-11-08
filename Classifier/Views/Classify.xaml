@@ -60,6 +60,12 @@
             <Label Content="Naming Spreadsheet:" />
             <TextBox MinWidth="350" Text="{Binding NamingSpreadsheetPath}" />
             <Button Command="{Binding BrowseForSpreadsheetCommand}" Content="Browse For Spreadsheet" />
+            <Label Margin="5,0,0,0"
+                   VerticalAlignment="Center"
+                   Content="Use SURF" />
+            <ToggleButton VerticalAlignment="Center"
+                          IsChecked="{Binding UseSurf}"
+                          Style="{StaticResource MaterialDesignSwitchToggleButton}" />
         </StackPanel>
         <ListBox Grid.Row="2"
                  ItemsSource="{Binding PdfFiles}"

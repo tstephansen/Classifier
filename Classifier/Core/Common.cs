@@ -1,5 +1,7 @@
-﻿using ClosedXML.Excel;
+﻿using Classifier.Data;
+using ClosedXML.Excel;
 using Microsoft.Win32;
+using Syncfusion.Windows.Forms.PdfViewer;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -50,6 +52,8 @@ namespace Classifier.Core
                     graphics.SmoothingMode = SmoothingMode.AntiAlias;
                     graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
                     graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                    //graphics.PixelOffsetMode = PixelOffsetMode.Default;
+                    //graphics.InterpolationMode = InterpolationMode.Default;
                     graphics.DrawImage(srcImage, new Rectangle(0, 0, newWidth, newHeight));
                     newImage.Save(outputFile);
                 }
@@ -117,6 +121,53 @@ namespace Classifier.Core
                 }
                 return datatable;
             });
+        }
+
+        public static Task CreateCriteriaFilesAsync(List<DocumentCriteria> documentCriteria, List<DocumentTypes> types)
+        {
+            return Task.Run(() =>
+            {
+                var criteriaDirectoryInfo = new DirectoryInfo(Common.CriteriaStorage);
+                var files = criteriaDirectoryInfo.GetFiles();
+                foreach (var file in files)
+                {
+                    File.Delete(file.FullName);
+                }
+                foreach (var type in types)
+                {
+                    var criterion = documentCriteria.Where(c => c.DocumentTypeId == type.Id).ToList();
+                    foreach (var criteria in criterion)
+                    {
+                        var image = Common.ConvertStringToImage(criteria.CriteriaBytes);
+                        var imagePath = Path.Combine(Common.CriteriaStorage, $"{type.DocumentType}-{criteria.CriteriaName}.png");
+                        image.Save(imagePath);
+                    }
+                }
+            });
+        }
+
+        public static Dictionary<string, string> ConvertPdfsToImages(List<string> pdfFiles)
+        {
+            var pdfImages = new Dictionary<string, string>();
+            using (var viewer = new PdfDocumentView())
+            {
+                var files = new List<FileInfo>();
+                pdfFiles.ForEach(c => files.Add(new FileInfo(c)));
+                foreach (var file in files.Where(c => c.Extension == ".pdf"))
+                {
+                    viewer.Load(file.FullName);
+                    var images = viewer.ExportAsImage(0, viewer.PageCount - 1);
+                    var imgCount = 1;
+                    foreach (var image in images)
+                    {
+                        var imgPath = Path.Combine(Common.TempStorage, $"{file.Name.Substring(0, file.Name.Length - 4)}.{imgCount}.png");
+                        pdfImages.Add(imgPath, file.FullName);
+                        image.Save(imgPath);
+                        imgCount++;
+                    }
+                }
+            }
+            return pdfImages;
         }
 
         public static string AppStorage = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\DocumentClassifier";

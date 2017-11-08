@@ -81,6 +81,15 @@
                         <vw:Helpers HorizontalAlignment="Center" />
                     </md:Card>
                 </TabItem>
+                <TabItem Header="Training">
+                    <md:Card MinWidth="400"
+                             MinHeight="300"
+                             Margin="10"
+                             HorizontalAlignment="Center"
+                             VerticalAlignment="Center">
+                        <vw:Training />
+                    </md:Card>
+                </TabItem>
             </dragablz:TabablzControl.Items>
         </dragablz:TabablzControl>
     </Grid>

@@ -14,5 +14,6 @@ namespace Classifier.Models
         public DocumentTypes DocumentType { get; set; }
         public DocumentCriteria DocumentCriteria { get; set; }
         public int Matches { get; set; }
+        public long Score { get; set; }
     }
 }
