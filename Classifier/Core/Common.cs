@@ -1,6 +1,8 @@
-﻿using Microsoft.Win32;
+﻿using ClosedXML.Excel;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
@@ -79,8 +81,49 @@ namespace Classifier.Core
             }
         }
 
+        public static Task<DataTable> GetSpreadsheetDataTableAsync(string spreadsheetPath, string spreadsheetName)
+        {
+            return Task.Run(() =>
+            {
+                var datatable = new DataTable();
+                IXLWorksheet xlWorksheet;
+                using (var workbook = new XLWorkbook(spreadsheetPath))
+                {
+                    xlWorksheet = workbook.Worksheet(spreadsheetName);
+                }
+                var tbl = xlWorksheet.Range(xlWorksheet.FirstCellUsed(), xlWorksheet.LastCellUsed()).AsTable(spreadsheetName);
+                var col = tbl.ColumnCount();
+                datatable.Clear();
+                for (var i = 1; i <= col; i++)
+                {
+                    var column = tbl.Column(i).Cell(1);
+                    datatable.Columns.Add(column.Value.ToString());
+                }
+                var firstHeadRow = 0;
+                var range = tbl.Range(tbl.FirstCellUsed(), tbl.LastCellUsed());
+                foreach (var item in range.Rows())
+                {
+                    if (firstHeadRow != 0)
+                    {
+                        var array = new object[col];
+                        for (var y = 1; y <= col; y++)
+                        {
+                            var cell = item.Cell(y);
+                            array[y - 1] = !string.IsNullOrWhiteSpace(cell.FormulaA1) ? cell.ValueCached : cell.Value;
+                        }
+                        datatable.Rows.Add(array);
+                    }
+                    firstHeadRow++;
+                }
+                return datatable;
+            });
+        }
+
         public static string AppStorage = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\DocumentClassifier";
         public static string TempStorage = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\DocumentClassifier\\temp";
         public static string PdfPath = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\DocumentClassifier\\PDFs";
+        public static string CriteriaStorage = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\DocumentClassifier\\Criteria";
+        public static string UserCriteriaStorage = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\DocumentClassifier\\UserCriteria";
+        public static string ResultsStorage = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\DocumentClassifier\\Results";
     }
 }

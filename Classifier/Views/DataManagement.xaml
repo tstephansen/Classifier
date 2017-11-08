@@ -44,11 +44,11 @@
                 <ListBox DisplayMemberPath="DocumentType"
                          ItemsSource="{Binding DocumentTypeList}"
                          SelectedItem="{Binding SelectedDocumentType}">
-                    <!--<i:Interaction.Triggers>
+                    <i:Interaction.Triggers>
                         <i:EventTrigger EventName="SelectionChanged">
-
+                            <i:InvokeCommandAction Command="{Binding DocumentTypeChangedCommand}" />
                         </i:EventTrigger>
-                    </i:Interaction.Triggers>-->
+                    </i:Interaction.Triggers>
                 </ListBox>
             </StackPanel>
             <StackPanel Grid.Column="1">

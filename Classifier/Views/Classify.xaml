@@ -13,30 +13,53 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
         <StackPanel Grid.Row="0"
+                    Grid.ColumnSpan="2"
                     HorizontalAlignment="Left"
                     Orientation="Horizontal">
-            <Button Margin="5"
+            <Button Margin="5,0,0,0"
                     Command="{Binding BrowseForFilesCommand}"
                     Content="Get Files" />
-            <Button Margin="5"
+            <Button Margin="5,0,0,0"
                     Command="{Binding RemoveFileCommand}"
                     Content="Remove Selected File" />
-            <Button Margin="5"
+            <Button Margin="5,0,0,0"
                     Command="{Binding ClassifyCommand}"
-                    Content="Classify" />
+                    Content="Classify"
+                    IsEnabled="{Binding ClassifyEnabled}" />
+            <Label Margin="5,0,0,0"
+                   VerticalAlignment="Center"
+                   Content="View Results" />
+            <ToggleButton VerticalAlignment="Center"
+                          IsChecked="{Binding ViewResults}"
+                          Style="{StaticResource MaterialDesignSwitchToggleButton}" />
+            <Label Margin="10,0,0,0"
+                   VerticalAlignment="Center"
+                   Content="Uniqueness Threshold:" />
+            <TextBox MinWidth="50"
+                     VerticalAlignment="Center"
+                     Text="{Binding UniquenessThreshold}" />
+            <Label Margin="5,0,0,0"
+                   VerticalAlignment="Center"
+                   Content="KNN:" />
+            <TextBox MinWidth="50"
+                     VerticalAlignment="Center"
+                     Text="{Binding KNearest}" />
+            <Button Command="{Binding ResultsFolderCommand}" Content="Results Folder" />
         </StackPanel>
-        <StackPanel Grid.Row="0"
-                    Margin="0,0,10,0"
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Center"
+        <StackPanel Grid.Row="1"
+                    Grid.ColumnSpan="2"
                     Orientation="Horizontal">
-            <Label Content="Uniqueness Threshold:" />
-            <TextBox MinWidth="50" Text="{Binding UniquenessThreshold}" />
-            <Label Content="KNN:" />
-            <TextBox MinWidth="50" Text="{Binding KNearest}" />
+            <Label Content="Naming Spreadsheet:" />
+            <TextBox MinWidth="350" Text="{Binding NamingSpreadsheetPath}" />
+            <Button Command="{Binding BrowseForSpreadsheetCommand}" Content="Browse For Spreadsheet" />
         </StackPanel>
         <ListBox Grid.Row="2"
                  ItemsSource="{Binding PdfFiles}"

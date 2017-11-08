@@ -313,6 +313,7 @@
     <Compile Include="Core\Classifier.cs" />
     <Compile Include="Core\Common.cs" />
     <Compile Include="Core\StorageManager.cs" />
+    <Compile Include="Core\Surfer.cs" />
     <Compile Include="Data\DataContext.cs" />
     <Compile Include="Data\DocumentCriteria.cs" />
     <Compile Include="Data\DocumentTypes.cs" />
@@ -333,6 +334,8 @@
       <DependentUpon>20171107182612_AddedBaseDims.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\DataContextModelSnapshot.cs" />
+    <Compile Include="Models\CriteriaMatchModel.cs" />
+    <Compile Include="Models\FileNamingModel.cs" />
     <Compile Include="Models\ImageCriteriaModel.cs" />
     <Compile Include="ViewModels\ClassifyViewModel.cs" />
     <Compile Include="ViewModels\CriteriaCreatorViewModel.cs" />

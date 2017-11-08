@@ -16,6 +16,8 @@ namespace Classifier.ViewModels
         {
             AddDocumentTypeCommand = new RelayCommand(AddDocumentType);
             RemoveDocumentTypeCommand = new RelayCommand(RemoveDocumentType);
+            RemoveCriteriaCommand = new RelayCommand(RemoveCriteria);
+            DocumentTypeChangedCommand = new RelayCommand(LoadCriterion);
             LoadDocumentTypes();
         }
 
@@ -23,6 +25,7 @@ namespace Classifier.ViewModels
         public IRelayCommand AddDocumentTypeCommand { get; }
         public IRelayCommand RemoveCriteriaCommand { get; }
         public IRelayCommand RemoveDocumentTypeCommand { get; }
+        public IRelayCommand DocumentTypeChangedCommand { get; }
         #endregion
 
         #region Methods

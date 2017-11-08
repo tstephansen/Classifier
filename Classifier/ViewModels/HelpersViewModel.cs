@@ -18,11 +18,13 @@ namespace Classifier.ViewModels
             PageNumber = 1;
             BrowseCommand = new RelayCommand(Browse);
             ConvertPdfToImageCommand = new RelayCommand(ConvertPdfToImage);
+            GotoImageFolderCommand = new RelayCommand(GotoImageFolder);
         }
 
         #region Commands
         public IRelayCommand BrowseCommand { get; }
         public IRelayCommand ConvertPdfToImageCommand { get; }
+        public IRelayCommand GotoImageFolderCommand { get; }
         #endregion
 
         #region Methods
@@ -43,7 +45,7 @@ namespace Classifier.ViewModels
                 if (((PageNumber - 1) < 0) || (PageNumber - 1) > viewer.PageCount) return;
                 var images = viewer.ExportAsImage(PageNumber - 1, PageNumber - 1);
                 var imgPath = Path.Combine(Common.TempStorage, $"{file.Name.Substring(0, file.Name.Length - 4)}.png");
-                var resizedPath = Path.Combine(Common.TempStorage, $"{file.Name.Substring(0, file.Name.Length - 4)}-R.png");
+                var resizedPath = Path.Combine(Common.UserCriteriaStorage, $"{file.Name.Substring(0, file.Name.Length - 4)}-R.png");
                 var image = images[0];
                 image.Save(imgPath);
                 double scaleFactor = 0;
@@ -58,6 +60,11 @@ namespace Classifier.ViewModels
                 }
                 if (resize) Common.Resize(imgPath, resizedPath, scaleFactor);
             }
+        }
+
+        public void GotoImageFolder()
+        {
+            System.Diagnostics.Process.Start(Common.UserCriteriaStorage);
         }
         #endregion
 

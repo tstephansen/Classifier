@@ -45,7 +45,7 @@ namespace Classifier.ViewModels
                 DocumentTypeList = new ObservableCollection<DocumentTypes>(docTypes);
                 foreach (var type in DocumentTypeList)
                 {
-                    var resultPath = Path.Combine(Results, type.DocumentType);
+                    var resultPath = Path.Combine(Common.ResultsStorage, type.DocumentType);
                     if (!Directory.Exists(resultPath)) Directory.CreateDirectory(resultPath);
                 }
             }
@@ -57,7 +57,7 @@ namespace Classifier.ViewModels
             if (files.ShowDialog() != true)
                 return;
             FilePath = files.FileName;
-            System.Windows.Media.Imaging.BitmapImage bmp = new System.Windows.Media.Imaging.BitmapImage();
+            var bmp = new System.Windows.Media.Imaging.BitmapImage();
             bmp.BeginInit();
             bmp.UriSource = new Uri(FilePath);
             bmp.EndInit();
@@ -67,12 +67,25 @@ namespace Classifier.ViewModels
             ImageSource = bmp;
         }
 
+        public void LoadCriteriaResult(string filePath)
+        {
+            ImageSource = new System.Windows.Media.Imaging.BitmapImage();
+            ImageSource.BeginInit();
+            ImageSource.UriSource = new Uri(filePath);
+            ImageSource.EndInit();
+            var width = Convert.ToInt32(ImageSource.Width);
+            var height = Convert.ToInt32(ImageSource.Height);
+            ImageSize = new Size(width, height);
+        }
+
         public void CreateCriteria()
         {
             if (SelectedDocumentType == null || CriteriaName == string.Empty)
             {
                 return;
             }
+            ImageSource = null;
+            ImageSize = new Size(0,0);
             var saved = CreateCriteriaFromImage(FilePath);
             if (saved < 1)
             {
@@ -82,7 +95,6 @@ namespace Classifier.ViewModels
             }
             else
             {
-                ImageSource = null;
                 CriteriaName = null;
                 SavedDialogTitle = "Saved";
                 SavedDialogText = "The criteria was saved successfully";
@@ -125,7 +137,7 @@ namespace Classifier.ViewModels
                 var imageString = Common.CreateStringFromImage(savePath);
                 saved = AddCriteriaToDatabase(imageString, expandedWidth, expandedHeight, expandedX, expandedY, originalWidth, originalHeight);
             }
-            if (File.Exists(savePath)) File.Delete(savePath);
+            //LoadCriteriaResult(savePath);
             return saved;
         }
 
@@ -246,7 +258,6 @@ namespace Classifier.ViewModels
 
         public double PreviewImageWidth { get; set; }
         public double PreviewImageHeight { get; set; }
-        public string Results = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\DocumentClassifier\\Results";
         #endregion
     }
 }
