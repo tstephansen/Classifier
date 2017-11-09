@@ -1,4 +1,7 @@
-﻿using System;
+﻿using LandmarkDevs.UI.Material.Controls.Dialogs;
+using LandmarkDevs.UI.Material.Controls.Windows;
+using Microsoft.Practices.ServiceLocation;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,7 +21,7 @@ namespace Classifier
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow
+    public partial class MainWindow : MaterialDesignWindow
     {
         public MainWindow()
         {

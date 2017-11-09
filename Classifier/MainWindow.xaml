@@ -11,6 +11,7 @@
                          Title="MainWindow"
                          Width="825"
                          Height="650"
+                         ld:DialogParticipation.Register="{Binding}"
                          Background="{DynamicResource MaterialDesignUserControlBackground}"
                          CenterOnPrimaryScreen="True"
                          FontFamily="pack://application:,,,/MaterialDesignThemes.Wpf;component/Resources/Roboto/#Roboto"

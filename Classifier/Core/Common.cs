@@ -52,8 +52,6 @@ namespace Classifier.Core
                     graphics.SmoothingMode = SmoothingMode.AntiAlias;
                     graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
                     graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
-                    //graphics.PixelOffsetMode = PixelOffsetMode.Default;
-                    //graphics.InterpolationMode = InterpolationMode.Default;
                     graphics.DrawImage(srcImage, new Rectangle(0, 0, newWidth, newHeight));
                     newImage.Save(outputFile);
                 }
@@ -170,11 +168,18 @@ namespace Classifier.Core
             return pdfImages;
         }
 
-        public static string AppStorage = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\DocumentClassifier";
-        public static string TempStorage = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\DocumentClassifier\\temp";
-        public static string PdfPath = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\DocumentClassifier\\PDFs";
-        public static string CriteriaStorage = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\DocumentClassifier\\Criteria";
-        public static string UserCriteriaStorage = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\DocumentClassifier\\UserCriteria";
-        public static string ResultsStorage = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\DocumentClassifier\\Results";
+        public static readonly string AppStorage = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\Classifier";
+        public static readonly string TempStorage = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\Classifier\\temp";
+        public static readonly string PdfPath = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\Classifier\\PDFs";
+        public static readonly string CriteriaStorage = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\Classifier\\Criteria";
+        public static readonly string UserCriteriaStorage = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\Classifier\\UserCriteria";
+        public static readonly string ResultsStorage = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\Classifier\\Results";
+
+        //public static readonly string AppStorage = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\DocumentClassifier";
+        //public static readonly string TempStorage = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\DocumentClassifier\\temp";
+        //public static readonly string PdfPath = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\DocumentClassifier\\PDFs";
+        //public static readonly string CriteriaStorage = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\DocumentClassifier\\Criteria";
+        //public static readonly string UserCriteriaStorage = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\DocumentClassifier\\UserCriteria";
+        //public static readonly string ResultsStorage = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\DocumentClassifier\\Results";
     }
 }

@@ -58,8 +58,7 @@ namespace Classifier.Core
                         var observedDescriptors = new Mat();
                         featureDetector.DetectAndCompute(uObservedImage, null, observedKeyPoints, observedDescriptors, false);
 
-                        // KdTree for faster results / less accuracy
-                        using (var ip = new LinearIndexParams())
+                        using (var ip = new KdTreeIndexParams())
                         using (var sp = new SearchParams())
                         using (DescriptorMatcher matcher = new FlannBasedMatcher(ip, sp))
                         {
@@ -84,6 +83,7 @@ namespace Classifier.Core
                                     homography = Features2DToolbox.GetHomographyMatrixFromMatchedFeatures(modelKeyPoints, observedKeyPoints, matches, mask, 2);
                             }
                         }
+
                     }
                     break;
                 default:
