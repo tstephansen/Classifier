@@ -345,6 +345,7 @@
       <DependentUpon>20171109000743_AddedScores.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\DataContextModelSnapshot.cs" />
+    <Compile Include="Models\CriteriaImageModel.cs" />
     <Compile Include="Models\CriteriaMatchModel.cs" />
     <Compile Include="Models\DocumentSelectionModel.cs" />
     <Compile Include="Models\FileNamingModel.cs" />

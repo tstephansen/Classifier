@@ -29,7 +29,7 @@ namespace Classifier.Core
         }
 
         #region Test Methods
-        private void FindMatchModified(Mat modelImage, Mat observedImage, double uniquenessThreshold, int k, out VectorOfKeyPoint modelKeyPoints, out VectorOfKeyPoint observedKeyPoints, VectorOfVectorOfDMatch matches, out Mat mask, out Mat homography, out long score)
+        private void FindMatchModified(Mat modelImage, Mat observedImage, double uniquenessThreshold, int k, out VectorOfKeyPoint modelKeyPoints, out VectorOfKeyPoint observedKeyPoints, VectorOfVectorOfDMatch matches, out Mat mask, out Mat homography, out long score, int detectionType)
         {
             homography = null;
             modelKeyPoints = new VectorOfKeyPoint();
@@ -41,17 +41,16 @@ namespace Classifier.Core
             using (UMat uModelImage = mdlImage.GetUMat(AccessType.Read))
             using (UMat uObservedImage = obsImage.GetUMat(AccessType.Read))
             {
-                ExtendMatch(uModelImage, uObservedImage, modelKeyPoints, observedKeyPoints, uniquenessThreshold, k, matches, out mask, out homography, out score);
+                DetectFeatures(uModelImage, uObservedImage, modelKeyPoints, observedKeyPoints, uniquenessThreshold, k, matches, out mask, out homography, out score, detectionType);
             }
         }
 
-        public static void ExtendMatch(UMat uModelImage, UMat uObservedImage, VectorOfKeyPoint modelKeyPoints, VectorOfKeyPoint observedKeyPoints, double uniquenessThreshold, int k, VectorOfVectorOfDMatch matches, out Mat mask, out Mat homography, out long score)
+        public static void DetectFeatures(UMat uModelImage, UMat uObservedImage, VectorOfKeyPoint modelKeyPoints, VectorOfKeyPoint observedKeyPoints, double uniquenessThreshold, int k, VectorOfVectorOfDMatch matches, out Mat mask, out Mat homography, out long score, int detectionType)
         {
-            var detectorType = "SIFT";
             homography = null;
-            switch (detectorType)
+            switch (detectionType)
             {
-                case "SIFT":
+                case 0:
                     using (var featureDetector = new SIFT(0, 3, 0.04, 10.0, 1.6))
                     {
                         var modelDescriptors = new Mat();
@@ -88,7 +87,7 @@ namespace Classifier.Core
                     }
                     break;
                 default:
-                case "KAZE":
+                case 1:
                     using (var featureDetector = new KAZE())
                     {
                         var modelDescriptors = new Mat();
@@ -127,7 +126,7 @@ namespace Classifier.Core
             }
         }
 
-        public long ProcessImage(Mat modelImage, Mat observedImage, double uniquenessThreshold, int k)
+        public long ProcessImage(Mat modelImage, Mat observedImage, double uniquenessThreshold, int k, int detectionType)
         {
             var score = 0L;
             Mat homography = null;
@@ -135,12 +134,12 @@ namespace Classifier.Core
             var observedKeyPoints = new VectorOfKeyPoint();
             using (var matches = new VectorOfVectorOfDMatch())
             {
-                FindMatchModified(modelImage, observedImage, uniquenessThreshold, k, out modelKeyPoints, out observedKeyPoints, matches, out Mat mask, out homography, out score);
+                FindMatchModified(modelImage, observedImage, uniquenessThreshold, k, out modelKeyPoints, out observedKeyPoints, matches, out Mat mask, out homography, out score, detectionType);
                 return score;
             }
         }
 
-        public Mat ProcessImageAndShowResult(Mat modelImage, Mat observedImage, double uniquenessThreshold, int k)
+        public Mat ProcessImageAndShowResult(Mat modelImage, Mat observedImage, double uniquenessThreshold, int k, int detectionType)
         {
             var score = 0L;
             Mat homography = null;
@@ -148,7 +147,7 @@ namespace Classifier.Core
             var observedKeyPoints = new VectorOfKeyPoint();
             using (var matches = new VectorOfVectorOfDMatch())
             {
-                FindMatchModified(modelImage, observedImage, uniquenessThreshold, k, out modelKeyPoints, out observedKeyPoints, matches, out Mat mask, out homography, out score);
+                FindMatchModified(modelImage, observedImage, uniquenessThreshold, k, out modelKeyPoints, out observedKeyPoints, matches, out Mat mask, out homography, out score, detectionType);
                 Mat result = new Mat();
                 Features2DToolbox.DrawMatches(modelImage, modelKeyPoints, observedImage, observedKeyPoints,
                    matches, result, new MCvScalar(0, 0, 0), new MCvScalar(0, 0, 0), mask);

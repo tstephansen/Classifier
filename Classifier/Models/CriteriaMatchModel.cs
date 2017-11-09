@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Classifier.Data;
+using System.IO;
 
 namespace Classifier.Models
 {
@@ -15,5 +16,6 @@ namespace Classifier.Models
         public DocumentCriteria DocumentCriteria { get; set; }
         public int Matches { get; set; }
         public long Score { get; set; }
+        public FileInfo MatchedFileInfo { get; set; }
     }
 }

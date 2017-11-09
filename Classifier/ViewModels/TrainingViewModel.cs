@@ -128,7 +128,7 @@ namespace Classifier.ViewModels
             {
                 using (var observedImage = CvInvoke.Imread(obsPath))
                 {
-                    score = Classifier.ProcessImage(modelImage, observedImage, UniquenessThreshold, KNearest);
+                    score = Classifier.ProcessImage(modelImage, observedImage, UniquenessThreshold, KNearest, 0);
                     //if (!ViewResults) return score;
                     //var result = Classifier.ProcessImageAndShowResult(modelImage, observedImage, UniquenessThreshold, KNearest);
                     //ImageViewer.Show(result);
