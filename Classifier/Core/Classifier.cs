@@ -34,43 +34,96 @@ namespace Classifier.Core
             homography = null;
             modelKeyPoints = new VectorOfKeyPoint();
             observedKeyPoints = new VectorOfKeyPoint();
-            using (UMat uModelImage = modelImage.GetUMat(AccessType.Read))
-            using (UMat uObservedImage = observedImage.GetUMat(AccessType.Read))
+            var mdlImage = new Mat();
+            var obsImage = new Mat();
+            CvInvoke.Threshold(modelImage, mdlImage, 127, 255, ThresholdType.BinaryInv);
+            CvInvoke.Threshold(observedImage, obsImage, 127, 255, ThresholdType.BinaryInv);
+            using (UMat uModelImage = mdlImage.GetUMat(AccessType.Read))
+            using (UMat uObservedImage = obsImage.GetUMat(AccessType.Read))
             {
-                using (var featureDetector = new KAZE())
-                {
-                    var modelDescriptors = new Mat();
-                    featureDetector.DetectAndCompute(uModelImage, null, modelKeyPoints, modelDescriptors, false);
-                    var observedDescriptors = new Mat();
-                    featureDetector.DetectAndCompute(uObservedImage, null, observedKeyPoints, observedDescriptors, false);
+                ExtendMatch(uModelImage, uObservedImage, modelKeyPoints, observedKeyPoints, uniquenessThreshold, k, matches, out mask, out homography, out score);
+            }
+        }
 
-                    // KdTree for faster results / less accuracy
-                    using (var ip = new LinearIndexParams())
-                    using (var sp = new SearchParams())
-                    using (DescriptorMatcher matcher = new FlannBasedMatcher(ip, sp))
+        public static void ExtendMatch(UMat uModelImage, UMat uObservedImage, VectorOfKeyPoint modelKeyPoints, VectorOfKeyPoint observedKeyPoints, double uniquenessThreshold, int k, VectorOfVectorOfDMatch matches, out Mat mask, out Mat homography, out long score)
+        {
+            var detectorType = "SIFT";
+            homography = null;
+            switch (detectorType)
+            {
+                case "SIFT":
+                    using (var featureDetector = new SIFT(0, 3, 0.04, 10.0, 1.6))
                     {
-                        matcher.Add(modelDescriptors);
-                        matcher.KnnMatch(observedDescriptors, matches, k, null);
-                        mask = new Mat(matches.Size, 1, DepthType.Cv8U, 1);
-                        mask.SetTo(new MCvScalar(255));
-                        Features2DToolbox.VoteForUniqueness(matches, uniquenessThreshold, mask);
-                        // Calculate score based on matches size
-                        score = 0;
-                        for (int i = 0; i < matches.Size; i++)
+                        var modelDescriptors = new Mat();
+                        featureDetector.DetectAndCompute(uModelImage, null, modelKeyPoints, modelDescriptors, false);
+                        var observedDescriptors = new Mat();
+                        featureDetector.DetectAndCompute(uObservedImage, null, observedKeyPoints, observedDescriptors, false);
+
+                        // KdTree for faster results / less accuracy
+                        using (var ip = new LinearIndexParams())
+                        using (var sp = new SearchParams())
+                        using (DescriptorMatcher matcher = new FlannBasedMatcher(ip, sp))
                         {
-                            if (mask.GetData(i)[0] == 0) continue;
-                            foreach (var e in matches[i].ToArray())
-                                ++score;
-                        }
-                        var nonZeroCount = CvInvoke.CountNonZero(mask);
-                        if (nonZeroCount >= 4)
-                        {
-                            nonZeroCount = Features2DToolbox.VoteForSizeAndOrientation(modelKeyPoints, observedKeyPoints, matches, mask, 1.5, 20);
+                            matcher.Add(modelDescriptors);
+                            matcher.KnnMatch(observedDescriptors, matches, k, null);
+                            mask = new Mat(matches.Size, 1, DepthType.Cv8U, 1);
+                            mask.SetTo(new MCvScalar(255));
+                            Features2DToolbox.VoteForUniqueness(matches, uniquenessThreshold, mask);
+                            // Calculate score based on matches size
+                            score = 0;
+                            for (int i = 0; i < matches.Size; i++)
+                            {
+                                if (mask.GetData(i)[0] == 0) continue;
+                                foreach (var e in matches[i].ToArray())
+                                    ++score;
+                            }
+                            var nonZeroCount = CvInvoke.CountNonZero(mask);
                             if (nonZeroCount >= 4)
-                                homography = Features2DToolbox.GetHomographyMatrixFromMatchedFeatures(modelKeyPoints, observedKeyPoints, matches, mask, 2);
+                            {
+                                nonZeroCount = Features2DToolbox.VoteForSizeAndOrientation(modelKeyPoints, observedKeyPoints, matches, mask, 1.5, 20);
+                                if (nonZeroCount >= 4)
+                                    homography = Features2DToolbox.GetHomographyMatrixFromMatchedFeatures(modelKeyPoints, observedKeyPoints, matches, mask, 2);
+                            }
                         }
                     }
-                }
+                    break;
+                default:
+                case "KAZE":
+                    using (var featureDetector = new KAZE())
+                    {
+                        var modelDescriptors = new Mat();
+                        featureDetector.DetectAndCompute(uModelImage, null, modelKeyPoints, modelDescriptors, false);
+                        var observedDescriptors = new Mat();
+                        featureDetector.DetectAndCompute(uObservedImage, null, observedKeyPoints, observedDescriptors, false);
+
+                        // KdTree for faster results / less accuracy
+                        using (var ip = new LinearIndexParams())
+                        using (var sp = new SearchParams())
+                        using (DescriptorMatcher matcher = new FlannBasedMatcher(ip, sp))
+                        {
+                            matcher.Add(modelDescriptors);
+                            matcher.KnnMatch(observedDescriptors, matches, k, null);
+                            mask = new Mat(matches.Size, 1, DepthType.Cv8U, 1);
+                            mask.SetTo(new MCvScalar(255));
+                            Features2DToolbox.VoteForUniqueness(matches, uniquenessThreshold, mask);
+                            // Calculate score based on matches size
+                            score = 0;
+                            for (int i = 0; i < matches.Size; i++)
+                            {
+                                if (mask.GetData(i)[0] == 0) continue;
+                                foreach (var e in matches[i].ToArray())
+                                    ++score;
+                            }
+                            var nonZeroCount = CvInvoke.CountNonZero(mask);
+                            if (nonZeroCount >= 4)
+                            {
+                                nonZeroCount = Features2DToolbox.VoteForSizeAndOrientation(modelKeyPoints, observedKeyPoints, matches, mask, 1.5, 20);
+                                if (nonZeroCount >= 4)
+                                    homography = Features2DToolbox.GetHomographyMatrixFromMatchedFeatures(modelKeyPoints, observedKeyPoints, matches, mask, 2);
+                            }
+                        }
+                    }
+                    break;
             }
         }
 

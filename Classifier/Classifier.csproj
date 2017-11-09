@@ -340,8 +340,13 @@
     <Compile Include="Migrations\20171107182612_AddedBaseDims.designer.cs">
       <DependentUpon>20171107182612_AddedBaseDims.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\20171109000743_AddedScores.cs" />
+    <Compile Include="Migrations\20171109000743_AddedScores.designer.cs">
+      <DependentUpon>20171109000743_AddedScores.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\DataContextModelSnapshot.cs" />
     <Compile Include="Models\CriteriaMatchModel.cs" />
+    <Compile Include="Models\DocumentSelectionModel.cs" />
     <Compile Include="Models\FileNamingModel.cs" />
     <Compile Include="Models\ImageCriteriaModel.cs" />
     <Compile Include="ViewModels\ClassifyViewModel.cs" />
@@ -350,6 +355,7 @@
     <Compile Include="ViewModels\HelpersViewModel.cs" />
     <Compile Include="ViewModels\MainWindowViewModel.cs" />
     <Compile Include="ViewModels\ImageResizerViewModel.cs" />
+    <Compile Include="ViewModels\TestingViewModel.cs" />
     <Compile Include="ViewModels\TrainingViewModel.cs" />
     <Compile Include="Views\Classify.xaml.cs">
       <DependentUpon>Classify.xaml</DependentUpon>
@@ -365,6 +371,9 @@
     </Compile>
     <Compile Include="Views\ImageResizer.xaml.cs">
       <DependentUpon>ImageResizer.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Testing.xaml.cs">
+      <DependentUpon>Testing.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\Training.xaml.cs">
       <DependentUpon>Training.xaml</DependentUpon>
@@ -398,6 +407,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\ImageResizer.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\Testing.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

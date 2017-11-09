@@ -17,6 +17,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <StackPanel Grid.Row="0"
                     HorizontalAlignment="Center"
@@ -58,5 +59,12 @@
                          SelectedItem="{Binding SelectedCriteria}" />
             </StackPanel>
         </Grid>
+        <StackPanel Grid.Row="3"
+                    HorizontalAlignment="Center"
+                    Orientation="Horizontal">
+            <Label Content="Req. Score for Document Type:" />
+            <TextBox MinWidth="40" Text="{Binding RequiredScore}" />
+            <Button Command="{Binding SetRequiredScoreCommand}" Content="Set" />
+        </StackPanel>
     </Grid>
 </UserControl>

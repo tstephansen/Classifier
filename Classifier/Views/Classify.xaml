@@ -14,13 +14,14 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-        <StackPanel Grid.Row="0"
+        <WrapPanel Grid.Row="0"
                     Grid.ColumnSpan="2"
                     HorizontalAlignment="Left"
                     Orientation="Horizontal">
@@ -30,6 +31,9 @@
             <Button Margin="5,0,0,0"
                     Command="{Binding RemoveFileCommand}"
                     Content="Remove Selected File" />
+            <Button Margin="5,0,0,0"
+                    Command="{Binding ReloadDocumentTypesCommand}"
+                    Content="Reload Doc. Types"/>
             <Button Margin="5,0,0,0"
                     Command="{Binding ClassifyCommand}"
                     Content="Classify"
@@ -53,8 +57,8 @@
                      VerticalAlignment="Center"
                      Text="{Binding KNearest}" />
             <Button Command="{Binding ResultsFolderCommand}" Content="Results Folder" />
-        </StackPanel>
-        <StackPanel Grid.Row="1"
+        </WrapPanel>
+        <WrapPanel Grid.Row="1"
                     Grid.ColumnSpan="2"
                     Orientation="Horizontal">
             <Label Content="Naming Spreadsheet:" />
@@ -66,9 +70,36 @@
             <ToggleButton VerticalAlignment="Center"
                           IsChecked="{Binding UseSurf}"
                           Style="{StaticResource MaterialDesignSwitchToggleButton}" />
+        </WrapPanel>
+        <StackPanel Grid.Row="2"
+                    Margin="0,10,0,0"
+                    Orientation="Horizontal">
+            <Label VerticalAlignment="Center" Content="Progress: " />
+            <TextBlock Margin="5,0,0,0"
+                       VerticalAlignment="Center"
+                       Text="{Binding ProgressText}" />
+            <Label Margin="20,0,0,0"
+                   VerticalAlignment="Center"
+                   Content="Progress %" />
+            <TextBlock Margin="5,0,0,0"
+                       VerticalAlignment="Center"
+                       Text="{Binding ProgressPercentage}" />
         </StackPanel>
-        <ListBox Grid.Row="2"
+        <ListBox Grid.Row="3"
                  ItemsSource="{Binding PdfFiles}"
                  SelectedItem="{Binding SelectedFile}" />
+        <ListBox Grid.Row="3"
+                 Grid.Column="1"
+                 ItemsSource="{Binding DocumentSelectionList}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <CheckBox IsChecked="{Binding Selected}" />
+                        <Label Margin="10,0,0,0" Content="{Binding DocumentType}" />
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+            <!--<ListBox.Resources></ListBox.Resources>-->
+        </ListBox>
     </Grid>
 </UserControl>

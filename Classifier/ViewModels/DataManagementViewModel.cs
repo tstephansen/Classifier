@@ -18,6 +18,7 @@ namespace Classifier.ViewModels
             RemoveDocumentTypeCommand = new RelayCommand(RemoveDocumentType);
             RemoveCriteriaCommand = new RelayCommand(RemoveCriteria);
             DocumentTypeChangedCommand = new RelayCommand(LoadCriterion);
+            SetRequiredScoreCommand = new RelayCommand(SetRequiredScore);
             LoadDocumentTypes();
         }
 
@@ -26,6 +27,7 @@ namespace Classifier.ViewModels
         public IRelayCommand RemoveCriteriaCommand { get; }
         public IRelayCommand RemoveDocumentTypeCommand { get; }
         public IRelayCommand DocumentTypeChangedCommand { get; }
+        public IRelayCommand SetRequiredScoreCommand { get; }
         #endregion
 
         #region Methods
@@ -41,9 +43,10 @@ namespace Classifier.ViewModels
         public void LoadCriterion()
         {
             if (SelectedDocumentType == null) return;
+            RequiredScore = SelectedDocumentType.AverageScore;
             using(var context = new DataContext())
             {
-                var criterion = context.DocumentCriteria.ToList();
+                var criterion = context.DocumentCriteria.Where(c=>c.DocumentTypeId == SelectedDocumentType.Id).ToList();
                 Criterion = new ObservableCollection<DocumentCriteria>(criterion);
             }
         }
@@ -95,6 +98,16 @@ namespace Classifier.ViewModels
                 LoadCriterion();
             }
         }
+
+        public void SetRequiredScore()
+        {
+            using(var context = new DataContext())
+            {
+                SelectedDocumentType.AverageScore = RequiredScore;
+                context.DocumentTypes.Update(SelectedDocumentType);
+                context.SaveChanges();
+            }
+        }
         #endregion
 
         #region Fields
@@ -132,6 +145,13 @@ namespace Classifier.ViewModels
             set => Set(ref _criterion, value);
         }
         private ObservableCollection<DocumentCriteria> _criterion;
+
+        public long RequiredScore
+        {
+            get => _requiredScore;
+            set => Set(ref _requiredScore, value);
+        }
+        private long _requiredScore;
         #endregion
     }
 }

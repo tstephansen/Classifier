@@ -23,6 +23,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Classifier.Models;
 using System.Data;
+using LandmarkDevs.Core.Shared;
 
 namespace Classifier.ViewModels
 {
@@ -32,16 +33,26 @@ namespace Classifier.ViewModels
         {
             Classifier = new DocClassifier();
             PdfFiles = new ObservableCollection<string>();
+            PdfFiles.CollectionChanged += PdfFiles_CollectionChanged;
             PdfImages = new Dictionary<string, string>();
             BrowseForFilesCommand = new RelayCommand(BrowseForFiles);
             RemoveFileCommand = new RelayCommand(RemoveSelectedFile);
             //ClassifyCommand = new RelayCommand(async () => await ClassifyDocumentsAsync());
             ClassifyCommand = new RelayCommand(async () => await ProcessDocumentsAsync());
             BrowseForSpreadsheetCommand = new RelayCommand(BrowseForSpreadsheet);
+            ResultsFolderCommand = new RelayCommand(GotoResultsFolder);
+            ReloadDocumentTypesCommand = new RelayCommand(LoadDocumentTypes);
+            DocumentSelectionList = new ObservableCollection<DocumentSelectionModel>();
             UniquenessThreshold = 0.60;
             KNearest = 2;
             ViewResults = false;
             Scores = new List<ImageScores>();
+            LoadDocumentTypes();
+        }
+
+        private void PdfFiles_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            ClassifyEnabled = PdfFiles.Count > 0 ? true : false;
         }
 
         #region Commands
@@ -49,16 +60,33 @@ namespace Classifier.ViewModels
         public IRelayCommand BrowseForFilesCommand { get; }
         public IRelayCommand RemoveFileCommand { get; }
         public IRelayCommand BrowseForSpreadsheetCommand { get; }
+        public IRelayCommand ResultsFolderCommand { get; }
+        public IRelayCommand ReloadDocumentTypesCommand { get; }
         #endregion
 
         #region Methods
+        public void LoadDocumentTypes()
+        {
+            using(var context = new DataContext())
+            {
+                var documentTypes = context.DocumentTypes.ToList();
+                foreach(var o in documentTypes)
+                {
+                    DocumentSelectionList.Add(new DocumentSelectionModel { DocumentTypeId = o.Id, DocumentType = o.DocumentType, Selected = true });
+                }
+            }
+        }
+
         public void BrowseForFiles()
         {
             SelectedFile = null;
             var filesDialog = Common.BrowseForFiles(true, "PDF (*.pdf)|*.pdf|Excel (*.xlsx)|*.xlsx");
             if (filesDialog.ShowDialog() != true)
                 return;
-            PdfFiles = new ObservableCollection<string>(filesDialog.FileNames);
+            foreach(var o in filesDialog.FileNames)
+            {
+                PdfFiles.Add(o);
+            }
         }
 
         public void BrowseForSpreadsheet()
@@ -82,65 +110,87 @@ namespace Classifier.ViewModels
 
         public async Task ProcessDocumentsAsync()
         {
-            List<DocumentTypes> types = null;
-            List<DocumentCriteria> documentCriteria = null;
-            using (var context = new DataContext())
+            var prog = new Progress<TaskStatusHelper>();
+            prog.ProgressChanged += (sender, exportProgress) =>
             {
-                types = context.DocumentTypes.ToList();
-                documentCriteria = context.DocumentCriteria.ToList();
-            }
-            if (!string.IsNullOrWhiteSpace(NamingSpreadsheetPath))
-            {
-                var spreadsheetDataTable = await Common.GetSpreadsheetDataTableAsync(NamingSpreadsheetPath, "Reference");
-                if (spreadsheetDataTable != null)
-                {
-                    NamingModels = new List<FileNamingModel>();
-                    foreach (DataRow dr in spreadsheetDataTable.Rows)
-                    {
-                        var serial = string.Empty;
-                        var tag = string.Empty;
-                        if (!string.IsNullOrWhiteSpace(dr["Serial"].ToString()))
-                            serial = dr["Serial"].ToString();
-                        if (!string.IsNullOrWhiteSpace(dr["Tag"].ToString()))
-                            tag = dr["Tag"].ToString();
-                        NamingModels.Add(new FileNamingModel { Serial = serial, Tag = tag });
-                    }
-                }
-            }
-            await ConvertPdfsToImagesAsync();
-            await Common.CreateCriteriaFilesAsync(documentCriteria, types);
-            var criteriaDirectoryInfo = new DirectoryInfo(Common.CriteriaStorage);
-            var criteriaFiles = criteriaDirectoryInfo.GetFiles();
-            var tempDirectoryInfo = new DirectoryInfo(Common.TempStorage);
-            var files = tempDirectoryInfo.GetFiles();
-            foreach (var file in files)
-            {
-                var criteriaMatches = types.Select(o => new CriteriaMatchModel
-                {
-                    DocumentType = o
-                }).ToList();
-                foreach (var criteriaFile in criteriaFiles)
-                {
-                    var criteriaFileSplit = criteriaFile.Name.Split('-');
-                    var type = types.First(c => c.DocumentType == criteriaFileSplit[0]);
-                    var cropPath = file.FullName;
-                    //var matches = Classify(criteriaFile.FullName, cropPath);
-                    var score = Classify(criteriaFile.FullName, cropPath);
-                    var existingModel = criteriaMatches.First(c => c.DocumentType == type);
-                    //existingModel.Matches += matches;
-                    existingModel.Score += score;
-                    existingModel.PdfFile = file.FullName;
-                }
-                var matchedCriteria = criteriaMatches.First(c => c.Score == criteriaMatches.Max(p => p.Score));
-                Console.WriteLine($@"Total Matches: {matchedCriteria.Score}");
-                if (matchedCriteria.Matches > 50)
-                {
-                    ExtractPageFromPdf(file, matchedCriteria.DocumentType.DocumentType, NamingModels);
-                }
-            }
+                ProgressPercentage = exportProgress.ProgressPercentage;
+                ProgressText = exportProgress.ProgressText;
+            };
+            await ProcessDocumentsTask(prog);
             System.Windows.Application.Current.Dispatcher.Invoke(() =>
             {
                 System.Windows.MessageBox.Show("Completed!");
+            });
+        }
+
+        public async Task ProcessDocumentsTask(IProgress<TaskStatusHelper> prog)
+        {
+            await Task.Run(async () =>
+            {
+                List<DocumentTypes> types = new List<DocumentTypes>();
+                List<DocumentCriteria> documentCriteria = null;
+                using (var context = new DataContext())
+                {
+                    var dTypes = context.DocumentTypes.ToList();
+                    foreach(var o in dTypes)
+                    {
+                        if (DocumentSelectionList.First(c => c.DocumentTypeId == o.Id).Selected)
+                            types.Add(o);
+                    }
+                    documentCriteria = context.DocumentCriteria.ToList();
+                }
+                if (!string.IsNullOrWhiteSpace(NamingSpreadsheetPath))
+                {
+                    var spreadsheetDataTable = await Common.GetSpreadsheetDataTableAsync(NamingSpreadsheetPath, "Reference");
+                    if (spreadsheetDataTable != null)
+                    {
+                        NamingModels = new List<FileNamingModel>();
+                        foreach (DataRow dr in spreadsheetDataTable.Rows)
+                        {
+                            var serial = string.Empty;
+                            var tag = string.Empty;
+                            if (!string.IsNullOrWhiteSpace(dr["Serial"].ToString()))
+                                serial = dr["Serial"].ToString();
+                            if (!string.IsNullOrWhiteSpace(dr["Tag"].ToString()))
+                                tag = dr["Tag"].ToString();
+                            NamingModels.Add(new FileNamingModel { Serial = serial, Tag = tag });
+                        }
+                    }
+                }
+                await ConvertPdfsToImagesAsync();
+                await Common.CreateCriteriaFilesAsync(documentCriteria, types);
+                var criteriaDirectoryInfo = new DirectoryInfo(Common.CriteriaStorage);
+                var criteriaFiles = criteriaDirectoryInfo.GetFiles();
+                var tempDirectoryInfo = new DirectoryInfo(Common.TempStorage);
+                var files = tempDirectoryInfo.GetFiles();
+                var fileCount = Convert.ToDouble(files.Count());
+                var currentFile = 0.0;
+                foreach (var file in files)
+                {
+                    var criteriaMatches = types.Select(o => new CriteriaMatchModel { DocumentType = o }).ToList();
+                    foreach (var criteriaFile in criteriaFiles)
+                    {
+                        var criteriaFileSplit = criteriaFile.Name.Split('-');
+                        var type = types.First(c => c.DocumentType == criteriaFileSplit[0]);
+                        var score = Classify(criteriaFile.FullName, file.FullName);
+                        var existingModel = criteriaMatches.First(c => c.DocumentType == type);
+                        existingModel.Score += score;
+                        existingModel.PdfFile = file.FullName;
+                    }
+                    var matchedCriteria = criteriaMatches.First(c => c.Score == criteriaMatches.Max(p => p.Score));
+                    Console.WriteLine($@"Total Matches: {matchedCriteria.Score}");
+                    if (matchedCriteria.Score >= matchedCriteria.DocumentType.AverageScore)
+                    {
+                        ExtractPageFromPdf(file, matchedCriteria.DocumentType.DocumentType, NamingModels);
+                    }
+                    currentFile++;
+                    var progress = (currentFile / fileCount) * 100;
+                    prog.Report(new TaskStatusHelper
+                    {
+                        ProgressText = file.Name,
+                        ProgressPercentage = progress
+                    });
+                }
             });
         }
 
@@ -287,9 +337,7 @@ namespace Classifier.ViewModels
             var value = doubleFirst / doubleSecond;
             return value;
         }
-
         
-
         public void ExtractPageFromPdf(FileInfo file, string type, List<FileNamingModel> models = null)
         {
             var fileName = file.Name.Substring(0, file.Name.Length - 4);
@@ -351,6 +399,11 @@ namespace Classifier.ViewModels
                     }
                 }
             }
+        }
+
+        public void GotoResultsFolder()
+        {
+            System.Diagnostics.Process.Start(Common.ResultsStorage);
         }
         #endregion
 
@@ -426,6 +479,27 @@ namespace Classifier.ViewModels
             set => Set(ref _useSurf, value);
         }
         private bool _useSurf;
+
+        public string ProgressText
+        {
+            get => _progressText;
+            set => Set(ref _progressText, value);
+        }
+        private string _progressText;
+
+        public double ProgressPercentage
+        {
+            get => _progressPercentage;
+            set => Set(ref _progressPercentage, value);
+        }
+        private double _progressPercentage;
+
+        public ObservableCollection<DocumentSelectionModel> DocumentSelectionList
+        {
+            get => _documentSelectionList;
+            set => Set(ref _documentSelectionList, value);
+        }
+        private ObservableCollection<DocumentSelectionModel> _documentSelectionList;
         #endregion
     }
 
