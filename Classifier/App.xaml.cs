@@ -1,4 +1,6 @@
-﻿using Microsoft.Practices.ServiceLocation;
+﻿using Classifier.Data;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Practices.ServiceLocation;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -17,6 +19,10 @@ namespace Classifier
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);   
+            using(var context = new DataContext())
+            {
+                context.Database.Migrate();
+            }
         }
     }
 }
