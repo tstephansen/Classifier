@@ -101,7 +101,7 @@
     <GenerateManifests>true</GenerateManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <SignManifests>true</SignManifests>
+    <SignManifests>false</SignManifests>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="ClosedXML, Version=0.90.0.0, Culture=neutral, PublicKeyToken=fd1eb21b62ae805b, processorArchitecture=MSIL">
@@ -353,7 +353,10 @@
     <Compile Include="Core\Surfer.cs" />
     <Compile Include="Core\TestGround.cs" />
     <Compile Include="Data\DataContext.cs" />
-    <Compile Include="Migrations\DbMigrationSeeder.cs" />
+    <Compile Include="Migrations\20171110171411_RemovedMinMaxScores.cs" />
+    <Compile Include="Migrations\20171110171411_RemovedMinMaxScores.designer.cs">
+      <DependentUpon>20171110171411_RemovedMinMaxScores.cs</DependentUpon>
+    </Compile>
     <Compile Include="Data\DocumentCriteria.cs" />
     <Compile Include="Data\DocumentTypes.cs" />
     <Compile Include="Migrations\20171107153539_InitialMigration.cs" />

@@ -15,9 +15,7 @@ namespace Classifier.Data
 
         public Guid Id { get; set; }
         public string DocumentType { get; set; }
-        public long MinScore { get; set; }
         public long AverageScore { get; set; }
-        public long MaxScore { get; set; }
         public virtual ICollection<DocumentCriteria> Criteria { get; set; }
     }
 }

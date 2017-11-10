@@ -3,18 +3,23 @@ using Microsoft.EntityFrameworkCore.Migrations;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Classifier.Migrations
 {
-    public class DbMigrationSeeder : Migration
+    public partial class RemovedMinMaxScores : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropColumn(
+                name: "MaxScore",
+                table: "DocumentTypes");
+
+            migrationBuilder.DropColumn(
+                name: "MinScore",
+                table: "DocumentTypes");
             using (var db = new DataContext())
             {
-                foreach(var type in _documentTypes)
+                foreach (var type in _documentTypes)
                 {
                     if (!db.DocumentTypes.Any(c => c.Id == type.Id))
                         db.DocumentTypes.Add(type);
@@ -24,14 +29,24 @@ namespace Classifier.Migrations
                     if (!db.DocumentCriteria.Any(c => c.Id == criteria.Id))
                         db.DocumentCriteria.Add(criteria);
                 }
-                //db.DocumentTypes.AddRange(_documentTypes);
-                //db.DocumentCriteria.AddRange(_criteria);
                 db.SaveChanges();
             }
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.AddColumn<long>(
+                name: "MaxScore",
+                table: "DocumentTypes",
+                nullable: false,
+                defaultValue: 0L);
+
+            migrationBuilder.AddColumn<long>(
+                name: "MinScore",
+                table: "DocumentTypes",
+                nullable: false,
+                defaultValue: 0L);
+            
             using (var db = new DataContext())
             {
                 db.DocumentTypes.RemoveRange(_documentTypes);
