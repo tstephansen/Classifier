@@ -44,6 +44,7 @@ namespace Classifier.ViewModels
             ResultsFolderCommand = new RelayCommand(GotoResultsFolder);
             ReloadDocumentTypesCommand = new RelayCommand(LoadDocumentTypes);
             CancelClassifyCommand = new RelayCommand(CancelClassify);
+            ConfirmDialogCommand = new RelayCommand(CloseDialog);
             DocumentSelectionList = new ObservableCollection<DocumentSelectionModel>();
             UniquenessThreshold = 0.60;
             KNearest = 2;
@@ -65,9 +66,15 @@ namespace Classifier.ViewModels
         public IRelayCommand ResultsFolderCommand { get; }
         public IRelayCommand ReloadDocumentTypesCommand { get; }
         public IRelayCommand CancelClassifyCommand { get; }
+        public IRelayCommand ConfirmDialogCommand { get; }
         #endregion
 
         #region Methods
+        public void CloseDialog()
+        {
+            DialogVisible = false;
+        }
+
         public void CancelClassify()
         {
             CancelTokenSource.Cancel();
@@ -158,11 +165,13 @@ namespace Classifier.ViewModels
             ClassifyEnabled = false;
             CancelTokenSource = new CancellationTokenSource();
             var token = CancelTokenSource.Token;
-            var prog = new Progress<TaskStatusHelper>();
+            var prog = new Progress<TaskProgress>();
+            var startTime = DateTime.Now;
             prog.ProgressChanged += (sender, exportProgress) =>
             {
                 ProgressPercentage = Math.Round(exportProgress.ProgressPercentage, 2);
                 ProgressText = exportProgress.ProgressText;
+                ProgressText2 = exportProgress.ProgressText2;
             };
             await ConvertPdfsToImagesAsync();
             await CopyImagesToTempFolderAsync();
@@ -179,51 +188,102 @@ namespace Classifier.ViewModels
                 documentCriteria = context.DocumentCriteria.ToList();
             }
             await Common.CreateCriteriaFilesAsync(documentCriteria, types);
-            if (ViewResults)
-            {
-                await ProcessDocumentsSingleTaskAsync(prog, token, types, documentCriteria);
-            }
-            else
-            {
-                await ProcessDocumentsTaskAsync(prog, token, types, documentCriteria);
-            }
+            SetNamingAndCriteria();
+
+            //var tempDirectoryInfo = new DirectoryInfo(Common.TempStorage);
+            //var files = tempDirectoryInfo.GetFiles();
+            //var fileCountInt = files.Count();
+            //var fileCount = Convert.ToDouble(files.Count());
+            //var currentFile = 0.0;
+            //var pc = new ETACalculator(3, 30);
+            //for (int i = 0, count = fileCountInt; i < fileCountInt; i++)
+            //{
+            //    var file = files[i];
+            //    await RunClassifyAsync(types, documentCriteria, file, token, prog, pc, currentFile, fileCount);
+            //    if (token.IsCancellationRequested)
+            //    {
+            //        DialogTitle = "Cancelled";
+            //        DialogText = "The classification has been cancelled.";
+            //        DialogVisible = true;
+            //        return;
+            //    }
+            //    currentFile++;
+            //}
+
+            var pc = new ETACalculator(5, 30);
+            await ProcessDocumentsTaskAsync(prog, token, types, documentCriteria, pc);
             await SaveMatchedFilesAsync(token);
-            System.Windows.Application.Current.Dispatcher.Invoke(() =>
-            {
-                System.Windows.MessageBox.Show("Completed!");
-            });
+            DialogTitle = "Complete";
+            DialogText = "The documents you selected have been classified.";
+            DialogVisible = true;
         }
 
-        public async Task ProcessDocumentsTaskAsync(IProgress<TaskStatusHelper> prog, CancellationToken token, List<DocumentTypes> types, List<DocumentCriteria> documentCriteria)
+        public Task RunClassifyAsync(List<DocumentTypes> types, List<DocumentCriteria> documentCriteria, FileInfo file, CancellationToken token, IProgress<TaskProgress> prog, ETACalculator pc, double currentFile, double fileCount)
         {
-            await Task.Run(async () =>
+            return Task.Run(() =>
             {
-                if (!string.IsNullOrWhiteSpace(NamingSpreadsheetPath))
+                var criteriaMatches = types.Select(o => new CriteriaMatchModel { DocumentType = o }).ToList();
+                using (var observedImage = CvInvoke.Imread(file.FullName))
                 {
-                    var spreadsheetDataTable = await Common.GetSpreadsheetDataTableAsync(NamingSpreadsheetPath, "Reference");
-                    if (spreadsheetDataTable != null)
+                    Parallel.ForEach(_criteriaImages, (criteriaImage) =>
                     {
-                        NamingModels = new List<FileNamingModel>();
-                        foreach (DataRow dr in spreadsheetDataTable.Rows)
-                        {
-                            var serial = string.Empty;
-                            var tag = string.Empty;
-                            if (!string.IsNullOrWhiteSpace(dr["Serial"].ToString()))
-                                serial = dr["Serial"].ToString();
-                            if (!string.IsNullOrWhiteSpace(dr["Tag"].ToString()))
-                                tag = dr["Tag"].ToString();
-                            NamingModels.Add(new FileNamingModel { Serial = serial, Tag = tag });
-                        }
-                    }
+                        var criteriaFile = criteriaImage.Info;
+                        var criteriaFileSplit = criteriaFile.Name.Split('-');
+                        var type = types.First(c => c.DocumentType == criteriaFileSplit[0]);
+                        var score = Classify(criteriaImage.Image, observedImage);
+                        var critName = criteriaFileSplit[1].Substring(0, criteriaFileSplit[1].Length - 4);
+                        var crit = documentCriteria.First(c => c.DocumentTypeId == type.Id && c.CriteriaName == critName);
+                        var existingModel = criteriaMatches.First(c => c.DocumentType == type);
+                        existingModel.Score += score;
+                        existingModel.PdfFile = file.FullName;
+                        ScoreLog = $"File Name: {file.FullName}\nDocument Type: {existingModel.DocumentType.DocumentType}\nCriteria: {crit.CriteriaName}\nScore: {score}\n--------------------\n{ScoreLog}";
+                        if (token.IsCancellationRequested)
+                            return;
+                    });
                 }
-                var criteriaDirectoryInfo = new DirectoryInfo(Common.CriteriaStorage);
-                var criteriaFiles = criteriaDirectoryInfo.GetFiles();
-                CreateCriteriaArrays(criteriaFiles);
+                var matchedCriteria = criteriaMatches.First(c => c.Score == criteriaMatches.Max(p => p.Score));
+                Console.WriteLine($@"Total Matches: {matchedCriteria.Score}");
+                if (matchedCriteria.Score >= matchedCriteria.DocumentType.AverageScore)
+                {
+                    matchedCriteria.MatchedFileInfo = file;
+                    _matchedFiles.Add(matchedCriteria);
+                }
+                var rawProgress = (currentFile / fileCount);
+                var progress = rawProgress * 100;
+                var progressFloat = (float)rawProgress;
+                pc.Update(progressFloat);
+                if (pc.ETAIsAvailable)
+                {
+                    var timeRemaining = pc.ETR.ToString(@"dd\.hh\:mm\:ss");
+                    prog.Report(new TaskProgress
+                    {
+                        ProgressText = file.Name,
+                        ProgressPercentage = progress,
+                        ProgressText2 = timeRemaining
+                    });
+                }
+                else
+                {
+                    prog.Report(new TaskProgress
+                    {
+                        ProgressText = file.Name,
+                        ProgressPercentage = progress,
+                        ProgressText2 = "Calculating..."
+                    });
+                }
+            });
+        }
+        
+
+        public Task ProcessDocumentsTaskAsync(IProgress<TaskProgress> prog, CancellationToken token, List<DocumentTypes> types, List<DocumentCriteria> documentCriteria, ETACalculator pc)
+        {
+            return Task.Run(() =>
+            {
                 var tempDirectoryInfo = new DirectoryInfo(Common.TempStorage);
                 var files = tempDirectoryInfo.GetFiles();
                 var fileCount = Convert.ToDouble(files.Count());
                 var currentFile = 0.0;
-                Parallel.ForEach(files, (file) =>
+                foreach(var file in files)
                 {
                     var criteriaMatches = types.Select(o => new CriteriaMatchModel { DocumentType = o }).ToList();
                     using (var observedImage = CvInvoke.Imread(file.FullName))
@@ -252,14 +312,60 @@ namespace Classifier.ViewModels
                         _matchedFiles.Add(matchedCriteria);
                     }
                     currentFile++;
-                    var progress = (currentFile / fileCount) * 100;
-                    prog.Report(new TaskStatusHelper
+                    var rawProgress = (currentFile / fileCount);
+                    var progress = rawProgress * 100;
+                    var progressFloat = (float)rawProgress;
+                    pc.Update(progressFloat);
+                    if (pc.ETAIsAvailable)
                     {
-                        ProgressText = file.Name,
-                        ProgressPercentage = progress
-                    });
-                });
+                        var timeRemaining = pc.ETR.ToString(@"dd\.hh\:mm\:ss");
+                        prog.Report(new TaskProgress
+                        {
+                            ProgressText = file.Name,
+                            ProgressPercentage = progress,
+                            ProgressText2 = timeRemaining
+                        });
+                    }
+                    else
+                    {
+                        prog.Report(new TaskProgress
+                        {
+                            ProgressText = file.Name,
+                            ProgressPercentage = progress,
+                            ProgressText2 = "Calculating..."
+                        });
+                    }
+                }
+                //Parallel.ForEach(files, (file) =>
+                //{
+                    
+                //});
             });
+        }
+
+        public void SetNamingAndCriteria()
+        {
+            if (!string.IsNullOrWhiteSpace(NamingSpreadsheetPath))
+            {
+                var spreadsheetDataTable = Common.GetSpreadsheetDataTable(NamingSpreadsheetPath, "Reference");
+                if (spreadsheetDataTable != null)
+                {
+                    NamingModels = new List<FileNamingModel>();
+                    foreach (DataRow dr in spreadsheetDataTable.Rows)
+                    {
+                        var serial = string.Empty;
+                        var tag = string.Empty;
+                        if (!string.IsNullOrWhiteSpace(dr["Serial"].ToString()))
+                            serial = dr["Serial"].ToString();
+                        if (!string.IsNullOrWhiteSpace(dr["Tag"].ToString()))
+                            tag = dr["Tag"].ToString();
+                        NamingModels.Add(new FileNamingModel { Serial = serial, Tag = tag });
+                    }
+                }
+            }
+            var criteriaDirectoryInfo = new DirectoryInfo(Common.CriteriaStorage);
+            var criteriaFiles = criteriaDirectoryInfo.GetFiles();
+            CreateCriteriaArrays(criteriaFiles);
         }
 
         public async Task ProcessDocumentsSingleTaskAsync(IProgress<TaskStatusHelper> prog, CancellationToken token, List<DocumentTypes> types, List<DocumentCriteria> documentCriteria)
@@ -485,30 +591,53 @@ namespace Classifier.ViewModels
 
         public async Task ConvertPdfsToImagesAsync()
         {
-            await Task.Run(() => ConvertPdfsToImages());
+            var files = new List<FileInfo>();
+            PdfFiles.ForEach(c => files.Add(new FileInfo(c)));
+            var pdfFiles = files.Where(c => c.Extension == ".pdf").ToList();
+            var tasks = new List<Task>();
+            foreach(var file in pdfFiles)
+            {
+                var t = new Task(() =>
+                {
+                    using (var viewer = new PdfDocumentView())
+                    {
+                        viewer.Load(file.FullName);
+                        var images = viewer.LoadedDocument.ExportAsImage(0, viewer.PageCount - 1, new SizeF(1428, 1848), true);
+                        var imgCount = 1;
+                        foreach (var image in images)
+                        {
+                            var imgPath = Path.Combine(Common.TempStorage, $"{file.Name.Substring(0, file.Name.Length - 4)}.{imgCount}.png");
+                            PdfImages.Add(imgPath, file.FullName);
+                            image.Save(imgPath);
+                            imgCount++;
+                        }
+                    }
+                });
+                tasks.Add(t);
+            }
+            await Task.WhenAll(tasks);
+            //await Task.Run(() => ConvertPdfsToImages());
         }
 
-        public void ConvertPdfsToImages()
-        {
-            using (var viewer = new PdfDocumentView())
-            {
-                var files = new List<FileInfo>();
-                PdfFiles.ForEach(c => files.Add(new FileInfo(c)));
-                foreach (var file in files.Where(c=>c.Extension == ".pdf"))
-                {
-                    viewer.Load(file.FullName);
-                    var images = viewer.LoadedDocument.ExportAsImage(0, viewer.PageCount - 1, new SizeF(1428, 1848), true);
-                    var imgCount = 1;
-                    foreach (var image in images)
-                    {
-                        var imgPath = Path.Combine(Common.TempStorage, $"{file.Name.Substring(0, file.Name.Length - 4)}.{imgCount}.png");
-                        PdfImages.Add(imgPath, file.FullName);
-                        image.Save(imgPath);
-                        imgCount++;
-                    }
-                }
-            }
-        }
+        //public void ConvertPdfsToImages()
+        //{
+        //    Parallel.ForEach(pdfFiles, (file) =>
+        //    {
+        //        using (var viewer = new PdfDocumentView())
+        //        {
+        //            viewer.Load(file.FullName);
+        //            var images = viewer.LoadedDocument.ExportAsImage(0, viewer.PageCount - 1, new SizeF(1428, 1848), true);
+        //            var imgCount = 1;
+        //            foreach (var image in images)
+        //            {
+        //                var imgPath = Path.Combine(Common.TempStorage, $"{file.Name.Substring(0, file.Name.Length - 4)}.{imgCount}.png");
+        //                PdfImages.Add(imgPath, file.FullName);
+        //                image.Save(imgPath);
+        //                imgCount++;
+        //            }
+        //        }
+        //    });
+        //}
 
         public void GotoResultsFolder()
         {
@@ -574,14 +703,7 @@ namespace Classifier.ViewModels
             set => Set(ref _namingSpreadsheetPath, value);
         }
         private string _namingSpreadsheetPath;
-
-        public bool UseSurf
-        {
-            get => _useSurf;
-            set => Set(ref _useSurf, value);
-        }
-        private bool _useSurf;
-
+        
         public string ProgressText
         {
             get => _progressText;
@@ -634,6 +756,34 @@ namespace Classifier.ViewModels
         private bool _cancelEnabled;
 
         private List<CriteriaMatchModel> _matchedFiles;
+
+        public string ProgressText2
+        {
+            get => _progressText2;
+            set => Set(ref _progressText2, value);
+        }
+        private string _progressText2;
+
+        public bool DialogVisible
+        {
+            get => _dialogVisible;
+            set => Set(ref _dialogVisible, value);
+        }
+        private bool _dialogVisible;
+
+        public string DialogTitle
+        {
+            get => _dialogTitle;
+            set => Set(ref _dialogTitle, value);
+        }
+        private string _dialogTitle;
+
+        public string DialogText
+        {
+            get => _dialogText;
+            set => Set(ref _dialogText, value);
+        }
+        private string _dialogText;
         #endregion
     }
 }

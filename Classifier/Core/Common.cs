@@ -87,38 +87,43 @@ namespace Classifier.Core
         {
             return Task.Run(() =>
             {
-                var datatable = new DataTable();
-                IXLWorksheet xlWorksheet;
-                using (var workbook = new XLWorkbook(spreadsheetPath))
-                {
-                    xlWorksheet = workbook.Worksheet(spreadsheetName);
-                }
-                var tbl = xlWorksheet.Range(xlWorksheet.FirstCellUsed(), xlWorksheet.LastCellUsed()).AsTable(spreadsheetName);
-                var col = tbl.ColumnCount();
-                datatable.Clear();
-                for (var i = 1; i <= col; i++)
-                {
-                    var column = tbl.Column(i).Cell(1);
-                    datatable.Columns.Add(column.Value.ToString());
-                }
-                var firstHeadRow = 0;
-                var range = tbl.Range(tbl.FirstCellUsed(), tbl.LastCellUsed());
-                foreach (var item in range.Rows())
-                {
-                    if (firstHeadRow != 0)
-                    {
-                        var array = new object[col];
-                        for (var y = 1; y <= col; y++)
-                        {
-                            var cell = item.Cell(y);
-                            array[y - 1] = !string.IsNullOrWhiteSpace(cell.FormulaA1) ? cell.ValueCached : cell.Value;
-                        }
-                        datatable.Rows.Add(array);
-                    }
-                    firstHeadRow++;
-                }
-                return datatable;
+                return GetSpreadsheetDataTable(spreadsheetPath, spreadsheetName);
             });
+        }
+
+        public static DataTable GetSpreadsheetDataTable(string spreadsheetPath, string spreadsheetName)
+        {
+            var datatable = new DataTable();
+            IXLWorksheet xlWorksheet;
+            using (var workbook = new XLWorkbook(spreadsheetPath))
+            {
+                xlWorksheet = workbook.Worksheet(spreadsheetName);
+            }
+            var tbl = xlWorksheet.Range(xlWorksheet.FirstCellUsed(), xlWorksheet.LastCellUsed()).AsTable(spreadsheetName);
+            var col = tbl.ColumnCount();
+            datatable.Clear();
+            for (var i = 1; i <= col; i++)
+            {
+                var column = tbl.Column(i).Cell(1);
+                datatable.Columns.Add(column.Value.ToString());
+            }
+            var firstHeadRow = 0;
+            var range = tbl.Range(tbl.FirstCellUsed(), tbl.LastCellUsed());
+            foreach (var item in range.Rows())
+            {
+                if (firstHeadRow != 0)
+                {
+                    var array = new object[col];
+                    for (var y = 1; y <= col; y++)
+                    {
+                        var cell = item.Cell(y);
+                        array[y - 1] = !string.IsNullOrWhiteSpace(cell.FormulaA1) ? cell.ValueCached : cell.Value;
+                    }
+                    datatable.Rows.Add(array);
+                }
+                firstHeadRow++;
+            }
+            return datatable;
         }
 
         public static Task CreateCriteriaFilesAsync(List<DocumentCriteria> documentCriteria, List<DocumentTypes> types)

@@ -349,8 +349,10 @@
     </ApplicationDefinition>
     <Compile Include="Core\Classifier.cs" />
     <Compile Include="Core\Common.cs" />
+    <Compile Include="Core\EtaCalculator.cs" />
     <Compile Include="Core\StorageManager.cs" />
     <Compile Include="Core\Surfer.cs" />
+    <Compile Include="Core\TaskProgress.cs" />
     <Compile Include="Core\TestGround.cs" />
     <Compile Include="Data\DataContext.cs" />
     <Compile Include="Migrations\20171110171411_RemovedMinMaxScores.cs" />

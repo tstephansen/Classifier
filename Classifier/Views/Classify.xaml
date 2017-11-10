@@ -4,6 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:ld="http://schemas.landmarkdevs.com/wpf"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:vm="clr-namespace:Classifier.ViewModels"
              d:DesignHeight="600"
              d:DesignWidth="800"
@@ -88,6 +89,7 @@
                          IsChecked="{Binding SelectedDetectionMethod, Converter={StaticResource RadioButtonToIntConverter}, ConverterParameter=1, Mode=TwoWay}" />
         </WrapPanel>
         <StackPanel Grid.Row="3"
+                    Grid.ColumnSpan="2"
                     Margin="0,10,0,0"
                     Orientation="Horizontal">
             <Label VerticalAlignment="Center" Content="Progress: " />
@@ -97,10 +99,13 @@
             <Label Margin="20,0,0,0"
                    VerticalAlignment="Center"
                    Content="Progress: " />
-            <TextBlock Margin="5,0,0,0"
+            <TextBlock MinWidth="60"
+                       Margin="5,0,0,0"
                        VerticalAlignment="Center"
                        Text="{Binding ProgressPercentage}" />
             <Label VerticalAlignment="Center" Content="%" />
+            <Label Margin="10,0,0,0" Content="Time Remaining" />
+            <Label Margin="5,0,0,0" Content="{Binding ProgressText2}" />
         </StackPanel>
         <ListBox Grid.Row="4"
                  ItemsSource="{Binding PdfFiles}"
@@ -127,5 +132,29 @@
                      VerticalAlignment="Stretch"
                      Text="{Binding ScoreLog}" />
         </Grid>
+        <md:DialogHost HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       CloseOnClickAway="True"
+                       IsOpen="{Binding DialogVisible}">
+            <md:DialogHost.DialogContent>
+                <Grid MinWidth="140" MinHeight="140">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Label HorizontalAlignment="Left"
+                           Content="{Binding DialogTitle}"
+                           FontWeight="Bold" />
+                    <TextBlock Grid.Row="1"
+                               Margin="0,30,0,0"
+                               HorizontalAlignment="Center"
+                               Text="{Binding DialogText}" />
+                    <Button Grid.Row="2"
+                            Command="{Binding ConfirmDialogCommand}"
+                            Content="OK" />
+                </Grid>
+            </md:DialogHost.DialogContent>
+        </md:DialogHost>
     </Grid>
 </UserControl>
