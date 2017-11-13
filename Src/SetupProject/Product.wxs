@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?define ProductId = "A24569A1-80EF-4837-BC7B-05A3B4935DE6"?>
+<?define ProductVersion = "0.0.1.0"?>
+<?define ProductUpgradeCode = "B887AB29-79E3-450A-8DE9-4608DC5E8E92"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension" xmlns:util="http://schemas.microsoft.com/wix/UtilExtension" xmlns:bal="http://schemas.microsoft.com/wix/BalExtension"><?define Classifier_TargetDir=$(var.Classifier.TargetDir)?>
+    <Product Id="*" Name="Classifier" Language="1033" Version="$(var.ProductVersion)" Manufacturer="Yokogawa Corporation of America" UpgradeCode="$(var.ProductUpgradeCode)">
+      <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+      <MediaTemplate EmbedCab="yes" />
+
+      <Directory Id="TARGETDIR" Name="SourceDir">
+        <Directory Id="ProgramFilesFolder">
+          <Directory Id="ProgramGroup" Name="Yokogawa Corporation of America">
+            <Directory Id="INSTALLDIR" Name="Classifier">
+              <Directory Id="X64DIR" Name="x64">
+              </Directory>
+            </Directory>
+          </Directory>
+        </Directory>
+        <Directory Id="ProgramMenuFolder">
+          <Directory Id="ApplicationProgramsFolder" Name="Yokogawa Corporation of America" />
+        </Directory>
+        <Directory Id="DesktopFolder" Name="Desktop" />
+      </Directory>
+
+      <DirectoryRef Id="ApplicationProgramsFolder">
+        <Component Id="ApplicationShortcut" Guid="5E5E6F83-D140-46D7-9565-5DE3DE517FD8">
+          <Shortcut Id="ApplicationStartMenuShortcut" Name="Classifier" Description="Classifier" Target="[#Classifier.exe]" WorkingDirectory="INSTALLDIR" />
+          <RemoveFolder Id="RemoveApplicationProgramsFolder" Directory="ApplicationProgramsFolder" On="uninstall" />
+          <RegistryValue Root="HKCU" Key="Software\Yokogawa Corporation of America\Classifier" Name="installed" Type="integer" Value="1" KeyPath="yes" />
+        </Component>
+      </DirectoryRef>
+      <DirectoryRef Id="DesktopFolder">
+        <Component Id="ApplicationShortcutDesktop" Guid="5DAB3C64-DA94-4875-8DAD-C0CF2CFB713D">
+          <Shortcut Id="ApplicationDesktopShortcut" Name="Classifier" Description="Classifier" Target="[#Classifier.exe]" WorkingDirectory="INSTALLDIR" />
+          <RemoveFolder Id="RemoveDesktopFolder" Directory="DesktopFolder" On="uninstall" />
+          <RegistryValue Root="HKCU" Key="Software\Yokogawa Corporation of America\Classifier" Name="installed" Type="integer" Value="1" KeyPath="yes" />
+        </Component>
+      </DirectoryRef>
+
+      <Upgrade Id="$(var.ProductUpgradeCode)">
+        <UpgradeVersion OnlyDetect="no" IncludeMinimum="yes" IncludeMaximum="yes" Minimum="0.0.1" Maximum="$(var.ProductVersion)" Property="PREVIOUSVERSIONSINSTALLED" />
+        <UpgradeVersion OnlyDetect="yes" IncludeMinimum="no" Minimum="$(var.ProductVersion)" Property="NEWERVERSIONDETECTED" />
+      </Upgrade>
+      <CustomActionRef Id="WixExitEarlyWithSuccess" />
+      <WixVariable Id="WixUILicenseRtf" Value="EULA.rtf" />
+      <Icon Id="icon.ico" SourceFile="$(var.ProjectDir)Icon.ico" />
+      <Property Id="ARPPRODUCTICON" Value="icon.ico" />
+      <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
+      <UIRef Id="WixUI_InstallDir" />
+
+      <PropertyRef Id="WIXNETFX4RELEASEINSTALLED" />
+      <PropertyRef Id="WIX_IS_NETFRAMEWORK_462_OR_LATER_INSTALLED" />
+
+      <Condition Message="This application requires .NET Framework 4.6.2. Please install the .NET Framework then run this installer again.">
+        <![CDATA[Installed OR WIX_IS_NETFRAMEWORK_462_OR_LATER_INSTALLED]]>
+      </Condition>
+
+      <InstallExecuteSequence>
+        <RemoveExistingProducts After="InstallValidate" />
+      </InstallExecuteSequence>
+      <Feature Id="ProductFeature"  Title="Classifier" Level="1">
+        <ComponentRef Id="ApplicationShortcut" />
+        <ComponentRef Id="ApplicationShortcutDesktop" />
+        <ComponentGroupRef Id="INSTALLDIR_files" />
+        <ComponentGroupRef Id="x64_files" />
+      </Feature>
+      
+    </Product>
+    <Fragment>
+      <ComponentGroup Id="INSTALLDIR_files" Directory="INSTALLDIR">
+        <Component Id="Classifier.exe" Guid="431dbb86-81b5-423a-aa15-5d4e776841a0">
+          <File Id="Classifier.exe" Name="Classifier.exe" Source="$(var.Classifier_TargetDir)Classifier.exe" />
+        </Component>
+        <Component Id="Classifier.exe.config" Guid="31b55140-9c22-4e72-b7b9-eb0cdb83c83e">
+          <File Id="Classifier.exe.config" Name="Classifier.exe.config" Source="$(var.Classifier_TargetDir)Classifier.exe.config" />
+        </Component>
+        <Component Id="ClosedXML.dll" Guid="7f9ddcdf-eca6-405b-aad4-1412562d2589">
+          <File Id="ClosedXML.dll" Name="ClosedXML.dll" Source="$(var.Classifier_TargetDir)ClosedXML.dll" />
+        </Component>
+        <Component Id="DocumentFormat.OpenXml.dll" Guid="2b1f205e-84d1-4ad4-9bd9-a1f8ff7687b6">
+          <File Id="DocumentFormat.OpenXml.dll" Name="DocumentFormat.OpenXml.dll" Source="$(var.Classifier_TargetDir)DocumentFormat.OpenXml.dll" />
+        </Component>
+        <Component Id="Dragablz.dll" Guid="aaa42f08-c3ba-40bb-8b0c-62a09e4ba00f">
+          <File Id="Dragablz.dll" Name="Dragablz.dll" Source="$(var.Classifier_TargetDir)Dragablz.dll" />
+        </Component>
+        <Component Id="Emgu.CV.UI.dll" Guid="9ef640fe-f4c9-4d27-a311-e48263f61eae">
+          <File Id="Emgu.CV.UI.dll" Name="Emgu.CV.UI.dll" Source="$(var.Classifier_TargetDir)Emgu.CV.UI.dll" />
+        </Component>
+        <Component Id="Emgu.CV.World.dll" Guid="126ca5eb-a349-4244-ba93-2162d2a0ffbd">
+          <File Id="Emgu.CV.World.dll" Name="Emgu.CV.World.dll" Source="$(var.Classifier_TargetDir)Emgu.CV.World.dll" />
+        </Component>
+        <Component Id="FastMember.Signed.dll" Guid="ece1a4f9-9703-41aa-8c4e-a698f2786694">
+          <File Id="FastMember.Signed.dll" Name="FastMember.Signed.dll" Source="$(var.Classifier_TargetDir)FastMember.Signed.dll" />
+        </Component>
+        <Component Id="LandmarkDevs.Core.Infrastructure.dll" Guid="ac958ad5-3fbc-4f33-bdeb-13fca3c808be">
+          <File Id="LandmarkDevs.Core.Infrastructure.dll" Name="LandmarkDevs.Core.Infrastructure.dll" Source="$(var.Classifier_TargetDir)LandmarkDevs.Core.Infrastructure.dll" />
+        </Component>
+        <Component Id="LandmarkDevs.Core.Shared.dll" Guid="dd759f1e-644b-4c1e-b192-f51e7b7ccee8">
+          <File Id="LandmarkDevs.Core.Shared.dll" Name="LandmarkDevs.Core.Shared.dll" Source="$(var.Classifier_TargetDir)LandmarkDevs.Core.Shared.dll" />
+        </Component>
+        <Component Id="LandmarkDevs.UI.Material.dll" Guid="2848665a-6c91-4204-a3a7-47b99966f20f">
+          <File Id="LandmarkDevs.UI.Material.dll" Name="LandmarkDevs.UI.Material.dll" Source="$(var.Classifier_TargetDir)LandmarkDevs.UI.Material.dll" />
+        </Component>
+        <Component Id="MaterialDesignColors.dll" Guid="9e1cf191-af60-46d9-b030-5c7940b2dd5d">
+          <File Id="MaterialDesignColors.dll" Name="MaterialDesignColors.dll" Source="$(var.Classifier_TargetDir)MaterialDesignColors.dll" />
+        </Component>
+        <Component Id="MaterialDesignThemes.Wpf.dll" Guid="f1cb7b73-5bcb-4371-8519-31bd279d562a">
+          <File Id="MaterialDesignThemes.Wpf.dll" Name="MaterialDesignThemes.Wpf.dll" Source="$(var.Classifier_TargetDir)MaterialDesignThemes.Wpf.dll" />
+        </Component>
+        <Component Id="Microsoft.Data.Sqlite.dll" Guid="088bff05-29da-4f4c-a6ff-da27fc64156b">
+          <File Id="Microsoft.Data.Sqlite.dll" Name="Microsoft.Data.Sqlite.dll" Source="$(var.Classifier_TargetDir)Microsoft.Data.Sqlite.dll" />
+        </Component>
+        <Component Id="Microsoft.EntityFrameworkCore.dll" Guid="bffb7388-e494-4871-bb72-d2f87fdb1609">
+          <File Id="Microsoft.EntityFrameworkCore.dll" Name="Microsoft.EntityFrameworkCore.dll" Source="$(var.Classifier_TargetDir)Microsoft.EntityFrameworkCore.dll" />
+        </Component>
+        <Component Id="Microsoft.EntityFrameworkCore.Design.dll" Guid="72ecd474-5df1-43e1-9109-19acc8e3674b">
+          <File Id="Microsoft.EntityFrameworkCore.Design.dll" Name="Microsoft.EntityFrameworkCore.Design.dll" Source="$(var.Classifier_TargetDir)Microsoft.EntityFrameworkCore.Design.dll" />
+        </Component>
+        <Component Id="Microsoft.EntityFrameworkCore.Relational.dll" Guid="36c1710e-99e5-46c6-a7c7-0f05363c2dab">
+          <File Id="Microsoft.EntityFrameworkCore.Relational.dll" Name="Microsoft.EntityFrameworkCore.Relational.dll" Source="$(var.Classifier_TargetDir)Microsoft.EntityFrameworkCore.Relational.dll" />
+        </Component>
+        <Component Id="Microsoft.EntityFrameworkCore.Sqlite.dll" Guid="eaf48d86-0d7b-4295-ae83-8b91259c9dc1">
+          <File Id="Microsoft.EntityFrameworkCore.Sqlite.dll" Name="Microsoft.EntityFrameworkCore.Sqlite.dll" Source="$(var.Classifier_TargetDir)Microsoft.EntityFrameworkCore.Sqlite.dll" />
+        </Component>
+        <Component Id="Microsoft.EntityFrameworkCore.SqlServer.dll" Guid="b7cff74f-4ab0-42b5-81e9-a657d20779ee">
+          <File Id="Microsoft.EntityFrameworkCore.SqlServer.dll" Name="Microsoft.EntityFrameworkCore.SqlServer.dll" Source="$(var.Classifier_TargetDir)Microsoft.EntityFrameworkCore.SqlServer.dll" />
+        </Component>
+        <Component Id="Microsoft.Expression.Interactions.dll" Guid="9c56b0ae-31f7-49d1-9b22-3d4046d7ff6c">
+          <File Id="Microsoft.Expression.Interactions.dll" Name="Microsoft.Expression.Interactions.dll" Source="$(var.Classifier_TargetDir)Microsoft.Expression.Interactions.dll" />
+        </Component>
+        <Component Id="Microsoft.Extensions.Caching.Abstractions.dll" Guid="c41cee64-0e32-4c0a-a79b-24a535662faf">
+          <File Id="Microsoft.Extensions.Caching.Abstractions.dll" Name="Microsoft.Extensions.Caching.Abstractions.dll" Source="$(var.Classifier_TargetDir)Microsoft.Extensions.Caching.Abstractions.dll" />
+        </Component>
+        <Component Id="Microsoft.Extensions.Caching.Memory.dll" Guid="22d6f5dd-1f5f-41a6-af47-d12e68125ab2">
+          <File Id="Microsoft.Extensions.Caching.Memory.dll" Name="Microsoft.Extensions.Caching.Memory.dll" Source="$(var.Classifier_TargetDir)Microsoft.Extensions.Caching.Memory.dll" />
+        </Component>
+        <Component Id="Microsoft.Extensions.Configuration.dll" Guid="1322c47f-6bae-4682-9d3e-52577e75094a">
+          <File Id="Microsoft.Extensions.Configuration.dll" Name="Microsoft.Extensions.Configuration.dll" Source="$(var.Classifier_TargetDir)Microsoft.Extensions.Configuration.dll" />
+        </Component>
+        <Component Id="Microsoft.Extensions.Configuration.Abstractions.dll" Guid="2a9b86b2-005b-4e43-82f6-e872fbb581c0">
+          <File Id="Microsoft.Extensions.Configuration.Abstractions.dll" Name="Microsoft.Extensions.Configuration.Abstractions.dll" Source="$(var.Classifier_TargetDir)Microsoft.Extensions.Configuration.Abstractions.dll" />
+        </Component>
+        <Component Id="Microsoft.Extensions.DependencyInjection.dll" Guid="3449f43e-dd11-48d4-bfe2-73fca6aa7d0e">
+          <File Id="Microsoft.Extensions.DependencyInjection.dll" Name="Microsoft.Extensions.DependencyInjection.dll" Source="$(var.Classifier_TargetDir)Microsoft.Extensions.DependencyInjection.dll" />
+        </Component>
+        <Component Id="Microsoft.Extensions.DependencyInjection.Abstractions.dll" Guid="f7dff258-15a4-4e5c-aeb6-d8ec24d64cd0">
+          <File Id="Microsoft.Extensions.DependencyInjection.Abstractions.dll" Name="Microsoft.Extensions.DependencyInjection.Abstractions.dll" Source="$(var.Classifier_TargetDir)Microsoft.Extensions.DependencyInjection.Abstractions.dll" />
+        </Component>
+        <Component Id="Microsoft.Extensions.Logging.dll" Guid="931c1813-6ea3-44e2-9047-4f3adb10414b">
+          <File Id="Microsoft.Extensions.Logging.dll" Name="Microsoft.Extensions.Logging.dll" Source="$(var.Classifier_TargetDir)Microsoft.Extensions.Logging.dll" />
+        </Component>
+        <Component Id="Microsoft.Extensions.Logging.Abstractions.dll" Guid="df48a97f-ee4d-4172-988d-7df745204327">
+          <File Id="Microsoft.Extensions.Logging.Abstractions.dll" Name="Microsoft.Extensions.Logging.Abstractions.dll" Source="$(var.Classifier_TargetDir)Microsoft.Extensions.Logging.Abstractions.dll" />
+        </Component>
+        <Component Id="Microsoft.Extensions.Options.dll" Guid="87f4b63f-c9ef-43bd-b009-f1b9f73992dd">
+          <File Id="Microsoft.Extensions.Options.dll" Name="Microsoft.Extensions.Options.dll" Source="$(var.Classifier_TargetDir)Microsoft.Extensions.Options.dll" />
+        </Component>
+        <Component Id="Microsoft.Extensions.Primitives.dll" Guid="f54551fe-ee76-453f-994c-ff04aaedad3f">
+          <File Id="Microsoft.Extensions.Primitives.dll" Name="Microsoft.Extensions.Primitives.dll" Source="$(var.Classifier_TargetDir)Microsoft.Extensions.Primitives.dll" />
+        </Component>
+        <Component Id="Microsoft.Practices.ServiceLocation.dll" Guid="1f35e2a2-a245-4d4b-967b-c6c5f30fa313">
+          <File Id="Microsoft.Practices.ServiceLocation.dll" Name="Microsoft.Practices.ServiceLocation.dll" Source="$(var.Classifier_TargetDir)Microsoft.Practices.ServiceLocation.dll" />
+        </Component>
+        <Component Id="Microsoft.WindowsAPICodePack.dll" Guid="98bcde62-56dc-415e-b82d-925c0a5fce8e">
+          <File Id="Microsoft.WindowsAPICodePack.dll" Name="Microsoft.WindowsAPICodePack.dll" Source="$(var.Classifier_TargetDir)Microsoft.WindowsAPICodePack.dll" />
+        </Component>
+        <Component Id="Microsoft.WindowsAPICodePack.Shell.dll" Guid="03e344fe-d016-4415-ba4d-e1fd3fb98062">
+          <File Id="Microsoft.WindowsAPICodePack.Shell.dll" Name="Microsoft.WindowsAPICodePack.Shell.dll" Source="$(var.Classifier_TargetDir)Microsoft.WindowsAPICodePack.Shell.dll" />
+        </Component>
+        <Component Id="MoreLinq.dll" Guid="05e5c911-49eb-4ba5-801c-44e814c2b9fa">
+          <File Id="MoreLinq.dll" Name="MoreLinq.dll" Source="$(var.Classifier_TargetDir)MoreLinq.dll" />
+        </Component>
+        <Component Id="Newtonsoft.Json.dll" Guid="f13a19c6-7817-47af-90a3-b39b04bb86e2">
+          <File Id="Newtonsoft.Json.dll" Name="Newtonsoft.Json.dll" Source="$(var.Classifier_TargetDir)Newtonsoft.Json.dll" />
+        </Component>
+        <Component Id="NLog.dll" Guid="c5c0a3ac-9c0f-4e8c-9e07-7945414464f9">
+          <File Id="NLog.dll" Name="NLog.dll" Source="$(var.Classifier_TargetDir)NLog.dll" />
+        </Component>
+        <Component Id="Prism.dll" Guid="b4bfa2b7-819a-4711-8ace-74082b14a42d">
+          <File Id="Prism.dll" Name="Prism.dll" Source="$(var.Classifier_TargetDir)Prism.dll" />
+        </Component>
+        <Component Id="Prism.Wpf.dll" Guid="9e859cf6-4762-464b-8fb3-5e6061e16096">
+          <File Id="Prism.Wpf.dll" Name="Prism.Wpf.dll" Source="$(var.Classifier_TargetDir)Prism.Wpf.dll" />
+        </Component>
+        <Component Id="Remotion.Linq.dll" Guid="062f8a42-155d-4580-9956-beb50eb7a4f8">
+          <File Id="Remotion.Linq.dll" Name="Remotion.Linq.dll" Source="$(var.Classifier_TargetDir)Remotion.Linq.dll" />
+        </Component>
+        <Component Id="SQLitePCLRaw.batteries_green.dll" Guid="1ea201e5-2bf5-4510-bc79-e09e04841c19">
+          <File Id="SQLitePCLRaw.batteries_green.dll" Name="SQLitePCLRaw.batteries_green.dll" Source="$(var.Classifier_TargetDir)SQLitePCLRaw.batteries_green.dll" />
+        </Component>
+        <Component Id="SQLitePCLRaw.batteries_v2.dll" Guid="bfef12d7-8c3b-4ad3-a56f-162b3ef9bfc9">
+          <File Id="SQLitePCLRaw.batteries_v2.dll" Name="SQLitePCLRaw.batteries_v2.dll" Source="$(var.Classifier_TargetDir)SQLitePCLRaw.batteries_v2.dll" />
+        </Component>
+        <Component Id="SQLitePCLRaw.core.dll" Guid="7d5d6d49-c15a-46c1-aa78-b2739b1b87c6">
+          <File Id="SQLitePCLRaw.core.dll" Name="SQLitePCLRaw.core.dll" Source="$(var.Classifier_TargetDir)SQLitePCLRaw.core.dll" />
+        </Component>
+        <Component Id="SQLitePCLRaw.provider.e_sqlite3.dll" Guid="898b65d5-cd07-4f40-b793-18a65c94601b">
+          <File Id="SQLitePCLRaw.provider.e_sqlite3.dll" Name="SQLitePCLRaw.provider.e_sqlite3.dll" Source="$(var.Classifier_TargetDir)SQLitePCLRaw.provider.e_sqlite3.dll" />
+        </Component>
+        <Component Id="Syncfusion.Compression.Base.dll" Guid="9179216e-a5a0-4c55-bd93-76e4fb8d6436">
+          <File Id="Syncfusion.Compression.Base.dll" Name="Syncfusion.Compression.Base.dll" Source="$(var.Classifier_TargetDir)Syncfusion.Compression.Base.dll" />
+        </Component>
+        <Component Id="Syncfusion.Core.dll" Guid="2a53eb76-2302-4dad-b494-e3b1b7a9d7a4">
+          <File Id="Syncfusion.Core.dll" Name="Syncfusion.Core.dll" Source="$(var.Classifier_TargetDir)Syncfusion.Core.dll" />
+        </Component>
+        <Component Id="Syncfusion.Data.WPF.dll" Guid="2672cacc-b8e2-4a49-a86a-a3f5881c46a7">
+          <File Id="Syncfusion.Data.WPF.dll" Name="Syncfusion.Data.WPF.dll" Source="$(var.Classifier_TargetDir)Syncfusion.Data.WPF.dll" />
+        </Component>
+        <Component Id="Syncfusion.Linq.Base.dll" Guid="3772aa8d-b3ed-4c7f-a0a0-829f10eed68d">
+          <File Id="Syncfusion.Linq.Base.dll" Name="Syncfusion.Linq.Base.dll" Source="$(var.Classifier_TargetDir)Syncfusion.Linq.Base.dll" />
+        </Component>
+        <Component Id="Syncfusion.Pdf.Base.dll" Guid="891de4d7-e6b1-4f83-b37e-147483c5bf08">
+          <File Id="Syncfusion.Pdf.Base.dll" Name="Syncfusion.Pdf.Base.dll" Source="$(var.Classifier_TargetDir)Syncfusion.Pdf.Base.dll" />
+        </Component>
+        <Component Id="Syncfusion.Pdf.Windows.dll" Guid="fcbaf4ab-22fc-46de-9653-c0415dbc0a7e">
+          <File Id="Syncfusion.Pdf.Windows.dll" Name="Syncfusion.Pdf.Windows.dll" Source="$(var.Classifier_TargetDir)Syncfusion.Pdf.Windows.dll" />
+        </Component>
+        <Component Id="Syncfusion.Pdf.WPF.dll" Guid="3629bf68-8456-49e9-9eae-2d04200544ab">
+          <File Id="Syncfusion.Pdf.WPF.dll" Name="Syncfusion.Pdf.WPF.dll" Source="$(var.Classifier_TargetDir)Syncfusion.Pdf.WPF.dll" />
+        </Component>
+        <Component Id="Syncfusion.PdfViewer.Windows.dll" Guid="95c7ddbf-d8c9-42c8-aa1f-5efee9b7cab9">
+          <File Id="Syncfusion.PdfViewer.Windows.dll" Name="Syncfusion.PdfViewer.Windows.dll" Source="$(var.Classifier_TargetDir)Syncfusion.PdfViewer.Windows.dll" />
+        </Component>
+        <Component Id="Syncfusion.PdfViewer.WPF.dll" Guid="51bb1d29-571e-454d-a0ce-62a7d9f239ea">
+          <File Id="Syncfusion.PdfViewer.WPF.dll" Name="Syncfusion.PdfViewer.WPF.dll" Source="$(var.Classifier_TargetDir)Syncfusion.PdfViewer.WPF.dll" />
+        </Component>
+        <Component Id="Syncfusion.SfShared.WPF.dll" Guid="44f5f065-a762-46e4-bc39-f32317b65c6e">
+          <File Id="Syncfusion.SfShared.WPF.dll" Name="Syncfusion.SfShared.WPF.dll" Source="$(var.Classifier_TargetDir)Syncfusion.SfShared.WPF.dll" />
+        </Component>
+        <Component Id="Syncfusion.Shared.Base.dll" Guid="39e87114-7be2-445f-b6d0-4bd1b45257bc">
+          <File Id="Syncfusion.Shared.Base.dll" Name="Syncfusion.Shared.Base.dll" Source="$(var.Classifier_TargetDir)Syncfusion.Shared.Base.dll" />
+        </Component>
+        <Component Id="Syncfusion.Shared.Windows.dll" Guid="910d44c9-d001-49f8-b7e7-2117746f95e5">
+          <File Id="Syncfusion.Shared.Windows.dll" Name="Syncfusion.Shared.Windows.dll" Source="$(var.Classifier_TargetDir)Syncfusion.Shared.Windows.dll" />
+        </Component>
+        <Component Id="Syncfusion.Shared.WPF.dll" Guid="8d8c9e03-087e-4f4e-9a65-06e17d2a9e92">
+          <File Id="Syncfusion.Shared.WPF.dll" Name="Syncfusion.Shared.WPF.dll" Source="$(var.Classifier_TargetDir)Syncfusion.Shared.WPF.dll" />
+        </Component>
+        <Component Id="System.Collections.Immutable.dll" Guid="d1b17a16-2725-4e04-88d0-d7dfe62ef89b">
+          <File Id="System.Collections.Immutable.dll" Name="System.Collections.Immutable.dll" Source="$(var.Classifier_TargetDir)System.Collections.Immutable.dll" />
+        </Component>
+        <Component Id="System.ComponentModel.Annotations.dll" Guid="e3a8a082-e1ef-4cdd-b8ef-d3411599aa31">
+          <File Id="System.ComponentModel.Annotations.dll" Name="System.ComponentModel.Annotations.dll" Source="$(var.Classifier_TargetDir)System.ComponentModel.Annotations.dll" />
+        </Component>
+        <Component Id="System.Data.SqlClient.dll" Guid="5d4faec1-ac02-4d87-8f84-ccfa990935da">
+          <File Id="System.Data.SqlClient.dll" Name="System.Data.SqlClient.dll" Source="$(var.Classifier_TargetDir)System.Data.SqlClient.dll" />
+        </Component>
+        <Component Id="System.Diagnostics.DiagnosticSource.dll" Guid="a7e15524-ec5d-4420-85f0-cd7fd98176f9">
+          <File Id="System.Diagnostics.DiagnosticSource.dll" Name="System.Diagnostics.DiagnosticSource.dll" Source="$(var.Classifier_TargetDir)System.Diagnostics.DiagnosticSource.dll" />
+        </Component>
+        <Component Id="System.Interactive.Async.dll" Guid="a4d8f624-ea96-49bf-a7b8-b95c57e8e097">
+          <File Id="System.Interactive.Async.dll" Name="System.Interactive.Async.dll" Source="$(var.Classifier_TargetDir)System.Interactive.Async.dll" />
+        </Component>
+        <Component Id="System.IO.Packaging.dll" Guid="0cd68f31-cd9f-412b-8109-70a6975989b8">
+          <File Id="System.IO.Packaging.dll" Name="System.IO.Packaging.dll" Source="$(var.Classifier_TargetDir)System.IO.Packaging.dll" />
+        </Component>
+        <Component Id="System.Runtime.CompilerServices.Unsafe.dll" Guid="abd58e32-c75c-4a89-9a7e-886b0ecbfce6">
+          <File Id="System.Runtime.CompilerServices.Unsafe.dll" Name="System.Runtime.CompilerServices.Unsafe.dll" Source="$(var.Classifier_TargetDir)System.Runtime.CompilerServices.Unsafe.dll" />
+        </Component>
+        <Component Id="System.ValueTuple.dll" Guid="d1a7fabc-7345-4909-98f6-e5298c40acd3">
+          <File Id="System.ValueTuple.dll" Name="System.ValueTuple.dll" Source="$(var.Classifier_TargetDir)System.ValueTuple.dll" />
+        </Component>
+        <Component Id="System.Windows.Interactivity.dll" Guid="377657a6-ba8e-4c2a-af71-9dfd03793945">
+          <File Id="System.Windows.Interactivity.dll" Name="System.Windows.Interactivity.dll" Source="$(var.Classifier_TargetDir)System.Windows.Interactivity.dll" />
+        </Component>
+        <Component Id="ZedGraph.dll" Guid="95aa586f-805c-40d5-b3d5-819cc4388d76">
+          <File Id="ZedGraph.dll" Name="ZedGraph.dll" Source="$(var.Classifier_TargetDir)ZedGraph.dll" />
+        </Component>
+        <Component Id="libs_Emgu.CV.UI.dll" Guid="b1ce5202-7a3c-4a42-8444-56ca090e887c">
+          <File Id="libs_Emgu.CV.UI.dll" Name="Emgu.CV.UI.dll" Source="$(var.Classifier_TargetDir)libs\Emgu.CV.UI.dll" />
+        </Component>
+        <Component Id="libs_Emgu.CV.World.dll" Guid="9a5d7c39-15b2-4b4f-9027-3b47931d3e83">
+          <File Id="libs_Emgu.CV.World.dll" Name="Emgu.CV.World.dll" Source="$(var.Classifier_TargetDir)libs\Emgu.CV.World.dll" />
+        </Component>
+      </ComponentGroup>
+    </Fragment>
+
+  <Fragment>
+    <ComponentGroup Id="x64_files" Directory="x64">
+      <Component Id="x64_concrt140.dll" Guid="a4ce5c18-6e58-4283-97de-9185b749d832">
+        <File Id="x64_concrt140.dll" Name="concrt140.dll" Source="$(var.Classifier_TargetDir)x64\concrt140.dll" />
+      </Component>
+      <Component Id="x64_cvextern.dll" Guid="020ec47b-da7a-44f8-b6e1-b449599a85e6">
+        <File Id="x64_cvextern.dll" Name="cvextern.dll" Source="$(var.Classifier_TargetDir)x64\cvextern.dll" />
+      </Component>
+      <Component Id="x64_msvcp140.dll" Guid="30ea9f77-c270-4a92-8ad6-246ac37b8aab">
+        <File Id="x64_msvcp140.dll" Name="msvcp140.dll" Source="$(var.Classifier_TargetDir)x64\msvcp140.dll" />
+      </Component>
+      <Component Id="x64_opencv_ffmpeg330_64.dll" Guid="aac7563b-3a5b-4372-abc8-220f830df49c">
+        <File Id="x64_opencv_ffmpeg330_64.dll" Name="opencv_ffmpeg330_64.dll" Source="$(var.Classifier_TargetDir)x64\opencv_ffmpeg330_64.dll" />
+      </Component>
+      <Component Id="x64_vcruntime140.dll" Guid="8ee10085-2704-49e0-8501-2eafd65defaf">
+        <File Id="x64_vcruntime140.dll" Name="vcruntime140.dll" Source="$(var.Classifier_TargetDir)x64\vcruntime140.dll" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+</Wix>

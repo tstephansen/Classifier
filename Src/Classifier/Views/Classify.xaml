@@ -1,0 +1,169 @@
+﻿<UserControl x:Class="Classifier.Views.Classify"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:ld="http://schemas.landmarkdevs.com/wpf"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:vm="clr-namespace:Classifier.ViewModels"
+             d:DesignHeight="600"
+             d:DesignWidth="800"
+             mc:Ignorable="d">
+    <UserControl.DataContext>
+        <vm:ClassifyViewModel />
+    </UserControl.DataContext>
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ld:RadioButtonToIntConverter x:Key="RadioButtonToIntConverter" />
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <WrapPanel Grid.Row="0"
+                   Grid.ColumnSpan="2"
+                   HorizontalAlignment="Left"
+                   Orientation="Horizontal">
+            <Button Margin="5,0,0,0"
+                    Command="{Binding BrowseForFilesCommand}"
+                    Content="Get Files" />
+            <Button Margin="5,0,0,0"
+                    Command="{Binding RemoveFileCommand}"
+                    Content="Remove Selected File" />
+            <Button Margin="5,0,0,0"
+                    Command="{Binding ReloadDocumentTypesCommand}"
+                    Content="Reload Doc. Types" />
+            <Button Margin="5,0,0,0"
+                    Command="{Binding ClassifyCommand}"
+                    Content="Classify"
+                    IsEnabled="{Binding ClassifyEnabled}" />
+            <Button Margin="5,0,0,0"
+                    Command="{Binding CancelClassifyCommand}"
+                    Content="Cancel"
+                    IsEnabled="{Binding CancelEnabled}" />
+            <Label Margin="5,0,0,0"
+                   VerticalAlignment="Center"
+                   Content="View Results" />
+            <ToggleButton VerticalAlignment="Center"
+                          IsChecked="{Binding ViewResults}"
+                          Style="{DynamicResource MaterialDesignSwitchToggleButton}" />
+            <Label Margin="10,0,0,0"
+                   VerticalAlignment="Center"
+                   Content="Uniqueness Threshold:" />
+            <TextBox MinWidth="50"
+                     VerticalAlignment="Center"
+                     Text="{Binding UniquenessThreshold}" />
+            <Label Margin="5,0,0,0"
+                   VerticalAlignment="Center"
+                   Content="KNN:" />
+            <TextBox MinWidth="50"
+                     VerticalAlignment="Center"
+                     Text="{Binding KNearest}" />
+            <Button Command="{Binding ResultsFolderCommand}" Content="Results Folder" />
+        </WrapPanel>
+        <WrapPanel Grid.Row="1"
+                   Grid.ColumnSpan="2"
+                   Orientation="Horizontal">
+            <Label Content="Naming Spreadsheet:" />
+            <TextBox MinWidth="350" Text="{Binding NamingSpreadsheetPath}" />
+            <Button Command="{Binding BrowseForSpreadsheetCommand}" Content="Browse For Spreadsheet" />
+        </WrapPanel>
+        <WrapPanel Grid.Row="2" Orientation="Horizontal">
+            <Label VerticalAlignment="Center" Content="Feature Detection Method:" />
+            <RadioButton VerticalAlignment="Center"
+                         Content="SIFT"
+                         GroupName="DetectionMethod"
+                         IsChecked="{Binding SelectedDetectionMethod, Converter={StaticResource RadioButtonToIntConverter}, ConverterParameter=0, Mode=TwoWay}" />
+            <RadioButton VerticalAlignment="Center"
+                         Content="KAZE"
+                         GroupName="DetectionMethod"
+                         IsChecked="{Binding SelectedDetectionMethod, Converter={StaticResource RadioButtonToIntConverter}, ConverterParameter=1, Mode=TwoWay}" />
+        </WrapPanel>
+        <StackPanel Grid.Row="3"
+                    Grid.ColumnSpan="2"
+                    Margin="0,10,0,0"
+                    Orientation="Horizontal">
+            <Label VerticalAlignment="Center" Content="Progress: " />
+            <TextBlock Margin="5,0,0,0"
+                       VerticalAlignment="Center"
+                       Text="{Binding ProgressText}" />
+            <Label Margin="20,0,0,0"
+                   VerticalAlignment="Center"
+                   Content="Progress: " />
+            <TextBlock MinWidth="60"
+                       Margin="5,0,0,0"
+                       VerticalAlignment="Center"
+                       Text="{Binding ProgressPercentage}" />
+            <Label VerticalAlignment="Center" Content="%" />
+            <Label Margin="10,0,0,0" Content="Time Remaining" />
+            <Label Margin="5,0,0,0" Content="{Binding ProgressText2}" />
+        </StackPanel>
+        <ListBox Grid.Row="4"
+                 ItemsSource="{Binding PdfFiles}"
+                 SelectedItem="{Binding SelectedFile}" />
+        <Grid Grid.Row="4" Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <ListBox Grid.Row="0" ItemsSource="{Binding DocumentSelectionList}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal">
+                            <CheckBox IsChecked="{Binding Selected}" />
+                            <Label Margin="10,0,0,0" Content="{Binding DocumentType}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+            <Label Grid.Row="1" Content="Score Log" />
+            <TextBox Grid.Row="2"
+                     HorizontalAlignment="Stretch"
+                     VerticalAlignment="Stretch"
+                     Text="{Binding ScoreLog}" />
+        </Grid>
+        <md:DialogHost Grid.RowSpan="5"
+                       Grid.ColumnSpan="2"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       CloseOnClickAway="True"
+                       IsOpen="{Binding DialogVisible}">
+            <md:DialogHost.DialogContent>
+                <Grid HorizontalAlignment="Stretch"
+                      VerticalAlignment="Stretch"
+                      Background="#7A212121">
+                    <Grid MinWidth="200"
+                          MinHeight="200"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Label HorizontalAlignment="Left"
+                               Content="{Binding DialogTitle}"
+                               FontWeight="Bold" />
+                        <TextBlock Grid.Row="1"
+                                   Margin="0,30,0,0"
+                                   HorizontalAlignment="Center"
+                                   Text="{Binding DialogText}" />
+                        <Button Grid.Row="2"
+                                Command="{Binding ConfirmDialogCommand}"
+                                Content="OK" />
+                    </Grid>
+                </Grid>
+            </md:DialogHost.DialogContent>
+        </md:DialogHost>
+    </Grid>
+</UserControl>
