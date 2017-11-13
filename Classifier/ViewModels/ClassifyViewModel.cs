@@ -166,7 +166,6 @@ namespace Classifier.ViewModels
             CancelTokenSource = new CancellationTokenSource();
             var token = CancelTokenSource.Token;
             var prog = new Progress<TaskProgress>();
-            var startTime = DateTime.Now;
             prog.ProgressChanged += (sender, exportProgress) =>
             {
                 ProgressPercentage = Math.Round(exportProgress.ProgressPercentage, 2);
@@ -336,10 +335,6 @@ namespace Classifier.ViewModels
                         });
                     }
                 }
-                //Parallel.ForEach(files, (file) =>
-                //{
-                    
-                //});
             });
         }
 
@@ -595,7 +590,36 @@ namespace Classifier.ViewModels
             PdfFiles.ForEach(c => files.Add(new FileInfo(c)));
             var pdfFiles = files.Where(c => c.Extension == ".pdf").ToList();
             var tasks = new List<Task>();
-            foreach(var file in pdfFiles)
+            foreach (var file in pdfFiles)
+            {
+                var t = Task.Factory.StartNew(() =>
+                {
+                    using (var viewer = new PdfDocumentView())
+                    {
+                        viewer.Load(file.FullName);
+                        var images = viewer.LoadedDocument.ExportAsImage(0, viewer.PageCount - 1, new SizeF(1428, 1848), true);
+                        var imgCount = 1;
+                        foreach (var image in images)
+                        {
+                            var imgPath = Path.Combine(Common.TempStorage, $"{file.Name.Substring(0, file.Name.Length - 4)}.{imgCount}.png");
+                            PdfImages.Add(imgPath, file.FullName);
+                            image.Save(imgPath);
+                            imgCount++;
+                        }
+                    }
+                });
+                tasks.Add(t);
+            }
+            await Task.WhenAll(tasks);
+        }
+
+        public IEnumerable<Task> CreatePdfToImageTasks()
+        {
+            var tasks = new List<Task>();
+            var files = new List<FileInfo>();
+            PdfFiles.ForEach(c => files.Add(new FileInfo(c)));
+            var pdfFiles = files.Where(c => c.Extension == ".pdf").ToList();
+            foreach (var file in pdfFiles)
             {
                 var t = new Task(() =>
                 {
@@ -615,34 +639,10 @@ namespace Classifier.ViewModels
                 });
                 tasks.Add(t);
             }
-            await Task.WhenAll(tasks);
-            //await Task.Run(() => ConvertPdfsToImages());
+            return tasks;
         }
 
-        //public void ConvertPdfsToImages()
-        //{
-        //    Parallel.ForEach(pdfFiles, (file) =>
-        //    {
-        //        using (var viewer = new PdfDocumentView())
-        //        {
-        //            viewer.Load(file.FullName);
-        //            var images = viewer.LoadedDocument.ExportAsImage(0, viewer.PageCount - 1, new SizeF(1428, 1848), true);
-        //            var imgCount = 1;
-        //            foreach (var image in images)
-        //            {
-        //                var imgPath = Path.Combine(Common.TempStorage, $"{file.Name.Substring(0, file.Name.Length - 4)}.{imgCount}.png");
-        //                PdfImages.Add(imgPath, file.FullName);
-        //                image.Save(imgPath);
-        //                imgCount++;
-        //            }
-        //        }
-        //    });
-        //}
-
-        public void GotoResultsFolder()
-        {
-            System.Diagnostics.Process.Start(Common.ResultsStorage);
-        }
+        public static void GotoResultsFolder() => System.Diagnostics.Process.Start(Common.ResultsStorage);
         #endregion
 
         #region Fields
