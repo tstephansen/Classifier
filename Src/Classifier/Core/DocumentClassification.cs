@@ -29,9 +29,13 @@ namespace Classifier.Core
                 Mat homography = null;
                 var observedKeyPoints = new VectorOfKeyPoint();
                 var obsImage = new Mat();
-                CvInvoke.Threshold(observedImage, obsImage, 127, 255, ThresholdType.BinaryInv);
+                CvInvoke.Threshold(observedImage, obsImage, 127.0, 255.0, ThresholdType.BinaryInv);
                 using (UMat uObservedImage = obsImage.GetUMat(AccessType.Read))
                 {
+                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        System.Windows.MessageBox.Show("Got umat");
+                    });
                     switch (detectionType)
                     {
                         default:

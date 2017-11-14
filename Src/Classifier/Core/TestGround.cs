@@ -65,34 +65,34 @@ namespace Classifier.Core
             return lst;
         }
 
-        public void Prove(string imagesDir, int networkInputSize, float trainSplitSize)
-        {
-            Console.WriteLine("Reading training set...");
-            var filePaths = GetFiles(imagesDir);
-            var files = new VectorOfCvString();
-            foreach (var o in filePaths)
-            {
-                var str = new CvString(o);
-                files.Push(str);
-            }
-            //CvInvoke.RandShuffle(files, 1, 0);
-            //ReadImages(filePaths);
+        //public void Prove(string imagesDir, int networkInputSize, float trainSplitSize)
+        //{
+        //    Console.WriteLine("Reading training set...");
+        //    var filePaths = GetFiles(imagesDir);
+        //    var files = new VectorOfCvString();
+        //    foreach (var o in filePaths)
+        //    {
+        //        var str = new CvString(o);
+        //        files.Push(str);
+        //    }
+        //    //CvInvoke.RandShuffle(files, 1, 0);
+        //    //ReadImages(filePaths);
 
-            Mat descriptorsSet;
-            var descriptorsMetadata = new VectorOfMat();
-            var classes = new VectorOfCvString();
+        //    //Mat descriptorsSet;
+        //    //var descriptorsMetadata = new VectorOfMat();
+        //    //var classes = new VectorOfCvString();
 
 
 
-            //for(var i = 0; i<files.Size;i++)
-            //{
-            //    var img = CvInvoke.Imread(o);
-            //    if (img.IsEmpty) continue;
-            //    var className = GetClassName(o);
-            //    var descriptors = GetDescriptors(img);
+        //    //for(var i = 0; i<files.Size;i++)
+        //    //{
+        //    //    var img = CvInvoke.Imread(o);
+        //    //    if (img.IsEmpty) continue;
+        //    //    var className = GetClassName(o);
+        //    //    var descriptors = GetDescriptors(img);
 
-            //}
-        }
+        //    //}
+        //}
 
         public static List<String> GetFiles(string imagesDir)
         {

@@ -52,7 +52,7 @@ namespace Classifier.ViewModels
         public async Task StartTrainingAsync()
         {
             List<DocumentCriteria> documentCriteria = null;
-            using (var context = new DataContext())
+            using (var context = new ClassifierContext())
             {
                 documentCriteria = context.DocumentCriteria.ToList();
             }
@@ -108,7 +108,7 @@ namespace Classifier.ViewModels
 
         public void RefreshDocTypes()
         {
-            using (var context = new DataContext())
+            using (var context = new ClassifierContext())
             {
                 var docTypes = context.DocumentTypes.ToList();
                 DocumentTypeList = new ObservableCollection<DocumentTypes>(docTypes);

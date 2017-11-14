@@ -1,10 +1,8 @@
 ﻿using Classifier.Core;
 using Classifier.Data;
 using Emgu.CV;
-using Emgu.CV.CvEnum;
 using Emgu.CV.UI;
 using LandmarkDevs.Core.Infrastructure;
-using Microsoft.Win32;
 using MoreLinq;
 using Syncfusion.Pdf;
 using Syncfusion.Pdf.Graphics;
@@ -14,20 +12,12 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 using Classifier.Models;
 using System.Data;
-using LandmarkDevs.Core.Shared;
 using System.Threading;
-using Emgu.CV.XFeatures2D;
-using Emgu.CV.Util;
-using Microsoft.EntityFrameworkCore;
 
 namespace Classifier.ViewModels
 {
@@ -77,7 +67,7 @@ namespace Classifier.ViewModels
 
         public void LoadDocumentTypes()
         {
-            using (var context = new DataContext())
+            using (var context = new ClassifierContext())
             {
                 var documentTypes = context.DocumentTypes.ToList();
                 foreach (var o in documentTypes)
@@ -175,25 +165,35 @@ namespace Classifier.ViewModels
         {
             return Task.Run(() =>
             {
-                var files = new List<FileInfo>();
-                PdfFiles.ForEach(c => files.Add(new FileInfo(c)));
-                var pdfFiles = files.Where(c => c.Extension == ".pdf").ToList();
-                Parallel.ForEach(pdfFiles, (file) =>
+                try
                 {
-                    using (var viewer = new PdfDocumentView())
+                    var files = new List<FileInfo>();
+                    PdfFiles.ForEach(c => files.Add(new FileInfo(c)));
+                    var pdfFiles = files.Where(c => c.Extension == ".pdf").ToList();
+                    Parallel.ForEach(pdfFiles, (file) =>
                     {
-                        viewer.Load(file.FullName);
-                        var images = viewer.LoadedDocument.ExportAsImage(0, viewer.PageCount - 1, new SizeF(1428, 1848), true);
-                        var imgCount = 1;
-                        foreach (var image in images)
+                        using (var viewer = new PdfDocumentView())
                         {
-                            var imgPath = Path.Combine(Common.TempStorage, $"{file.Name.Substring(0, file.Name.Length - 4)}.{imgCount}.png");
-                            PdfImages.Add(imgPath, file.FullName);
-                            image.Save(imgPath);
-                            imgCount++;
+                            viewer.Load(file.FullName);
+                            var images = viewer.LoadedDocument.ExportAsImage(0, viewer.PageCount - 1, new SizeF(1428, 1848), true);
+                            var imgCount = 1;
+                            foreach (var image in images)
+                            {
+                                var imgPath = Path.Combine(Common.TempStorage, $"{file.Name.Substring(0, file.Name.Length - 4)}.{imgCount}.png");
+                                PdfImages.Add(imgPath, file.FullName);
+                                image.Save(imgPath);
+                                imgCount++;
+                            }
                         }
-                    }
-                });
+                    });
+                }
+                catch(Exception ex)
+                {
+                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        System.Windows.MessageBox.Show(ex.Message.Trim());
+                    });
+                }
             });
         }
         #endregion
@@ -208,11 +208,7 @@ namespace Classifier.ViewModels
 
         public async Task ProcessDocumentsAsync()
         {
-            var isOpenCLAvailable = CvInvoke.HaveOpenCLCompatibleGpuDevice;
-            var usingOpenCl = CvInvoke.HaveOpenCL;
-            Console.WriteLine(isOpenCLAvailable);
-            Console.WriteLine(usingOpenCl);
-            CvInvoke.UseOpenCL = true;
+            _matchedFiles = new List<CriteriaMatchModel>();
             CancelEnabled = true;
             ClassifyEnabled = false;
             CancelTokenSource = new CancellationTokenSource();
@@ -229,7 +225,7 @@ namespace Classifier.ViewModels
             await CopyImagesToTempFolderAsync();
             var types = new List<DocumentTypes>();
             List<DocumentCriteria> documentCriteria = null;
-            using (var context = new DataContext())
+            using (var context = new ClassifierContext())
             {
                 var dTypes = context.DocumentTypes.ToList();
                 foreach (var o in dTypes)
@@ -240,7 +236,15 @@ namespace Classifier.ViewModels
                 documentCriteria = context.DocumentCriteria.ToList();
             }
             await Common.CreateCriteriaFilesAsync(documentCriteria, types);
+            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            {
+                System.Windows.MessageBox.Show("Setting Criteria.");
+            });
             SetNamingAndCriteria();
+            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            {
+                System.Windows.MessageBox.Show("Criteria set.");
+            });
             var tempDirectoryInfo = new DirectoryInfo(Common.TempStorage);
             var files = tempDirectoryInfo.GetFiles();
             var pc = new ETACalculator(3, 30);
@@ -257,11 +261,19 @@ namespace Classifier.ViewModels
             var fileCount = Convert.ToDouble(files.Count);
             return Task.Run(() =>
             {
-                foreach(var file in files)
+                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                {
+                    System.Windows.MessageBox.Show("Starting CV.");
+                });
+                foreach (var file in files)
                 {
                     var criteriaMatches = types.Select(o => new CriteriaMatchModel { DocumentType = o }).ToList();
                     using (var observedImage = CvInvoke.Imread(file.FullName))
                     {
+                        System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            System.Windows.MessageBox.Show("Observed image created..");
+                        });
                         Parallel.ForEach(_criteriaImages, (criteriaImage) =>
                         {
                             var criteriaFile = criteriaImage.Info;
@@ -314,6 +326,10 @@ namespace Classifier.ViewModels
 
         public long ClassifyFast(CriteriaImageModel model, Mat observedImage)
         {
+            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            {
+                System.Windows.MessageBox.Show("Classify fast..");
+            });
             var score = 0L;
             score = DocClass.Classify(model.ModelKeyPoints, model.ModelDescriptors, observedImage, UniquenessThreshold, KNearest, SelectedDetectionMethod);
             return score;

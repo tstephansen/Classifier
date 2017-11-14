@@ -15,7 +15,7 @@ namespace Classifier.ViewModels
         public MainWindowViewModel()
         {
             CreateAndRemoveDirectories();
-            using(var context = new DataContext())
+            using(var context = new ClassifierContext())
             {
                 var documentTypes = context.DocumentTypes.ToList();
                 foreach(var type in documentTypes)

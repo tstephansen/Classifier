@@ -1,21 +1,23 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Classifier.Data
 {
-    public class DocumentTypes
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
+    public partial class DocumentTypes
     {
+        
         public DocumentTypes()
         {
-            Criteria = new List<DocumentCriteria>();
+            DocumentCriteria = new HashSet<DocumentCriteria>();
         }
 
         public Guid Id { get; set; }
+
         public string DocumentType { get; set; }
+
         public long AverageScore { get; set; }
-        public virtual ICollection<DocumentCriteria> Criteria { get; set; }
+
+        public virtual ICollection<DocumentCriteria> DocumentCriteria { get; set; }
     }
 }

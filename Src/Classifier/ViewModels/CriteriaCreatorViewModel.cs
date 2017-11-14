@@ -39,7 +39,7 @@ namespace Classifier.ViewModels
 
         public void RefreshDocTypes()
         {
-            using(var context = new DataContext())
+            using(var context = new ClassifierContext())
             {
                 var docTypes = context.DocumentTypes.ToList();
                 DocumentTypeList = new ObservableCollection<DocumentTypes>(docTypes);
@@ -143,7 +143,7 @@ namespace Classifier.ViewModels
 
         public int AddCriteriaToDatabase(string imageBytes, int expandedWidth, int expandedHeight, int expandedX, int expandedY, int origW, int origH)
         {
-            using(var context = new DataContext())
+            using(var context = new ClassifierContext())
             {
                 context.DocumentCriteria.Add(new DocumentCriteria
                 {

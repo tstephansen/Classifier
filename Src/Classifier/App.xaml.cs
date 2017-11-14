@@ -1,7 +1,4 @@
-﻿using Classifier.Data;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Practices.ServiceLocation;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
@@ -16,13 +13,5 @@ namespace Classifier
     /// </summary>
     public partial class App : Application
     {
-        protected override void OnStartup(StartupEventArgs e)
-        {
-            base.OnStartup(e);   
-            using(var context = new DataContext())
-            {
-                context.Database.Migrate();
-            }
-        }
     }
 }

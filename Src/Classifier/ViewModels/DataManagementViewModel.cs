@@ -33,7 +33,7 @@ namespace Classifier.ViewModels
         #region Methods
         public void LoadDocumentTypes()
         {
-            using(var context = new DataContext())
+            using(var context = new ClassifierContext())
             {
                 var docTypes = context.DocumentTypes.ToList();
                 DocumentTypeList = new ObservableCollection<DocumentTypes>(docTypes);
@@ -44,7 +44,7 @@ namespace Classifier.ViewModels
         {
             if (SelectedDocumentType == null) return;
             RequiredScore = SelectedDocumentType.AverageScore;
-            using(var context = new DataContext())
+            using(var context = new ClassifierContext())
             {
                 var criterion = context.DocumentCriteria.Where(c=>c.DocumentTypeId == SelectedDocumentType.Id).ToList();
                 Criterion = new ObservableCollection<DocumentCriteria>(criterion);
@@ -55,7 +55,7 @@ namespace Classifier.ViewModels
         {
             if (!string.IsNullOrWhiteSpace(DocumentTypeText))
             {
-                using(var context = new DataContext())
+                using(var context = new ClassifierContext())
                 {
                     if (context.DocumentTypes.Any(c => c.DocumentType.Equals(DocumentTypeText, StringComparison.CurrentCultureIgnoreCase))) return;
                     context.DocumentTypes.Add(new DocumentTypes
@@ -73,7 +73,7 @@ namespace Classifier.ViewModels
         {
             if (SelectedDocumentType != null)
             {
-                using (var context = new DataContext())
+                using (var context = new ClassifierContext())
                 {
                     var criteria = context.DocumentCriteria.Where(c => c.DocumentTypeId == SelectedDocumentType.Id).ToList();
                     foreach (var o in criteria)
@@ -91,7 +91,7 @@ namespace Classifier.ViewModels
         {
             if(SelectedCriteria != null)
             {
-                using(var context = new DataContext())
+                using(var context = new ClassifierContext())
                 {
                     context.DocumentCriteria.Remove(SelectedCriteria);
                 }
@@ -101,10 +101,9 @@ namespace Classifier.ViewModels
 
         public void SetRequiredScore()
         {
-            using(var context = new DataContext())
+            using(var context = new ClassifierContext())
             {
                 SelectedDocumentType.AverageScore = RequiredScore;
-                context.DocumentTypes.Update(SelectedDocumentType);
                 context.SaveChanges();
             }
         }

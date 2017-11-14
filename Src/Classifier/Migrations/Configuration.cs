@@ -1,57 +1,28 @@
-﻿using Classifier.Data;
-using Microsoft.EntityFrameworkCore.Migrations;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 namespace Classifier.Migrations
 {
-    public partial class RemovedMinMaxScores : Migration
-    {
-        protected override void Up(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.DropColumn(
-                name: "MaxScore",
-                table: "DocumentTypes");
+    using Classifier.Data;
+    using System;
+    using System.Collections.Generic;
+    using System.Data.Entity;
+    using System.Data.Entity.Migrations;
+    using System.Linq;
 
-            migrationBuilder.DropColumn(
-                name: "MinScore",
-                table: "DocumentTypes");
-            using (var db = new DataContext())
-            {
-                foreach (var type in _documentTypes)
-                {
-                    if (!db.DocumentTypes.Any(c => c.Id == type.Id))
-                        db.DocumentTypes.Add(type);
-                }
-                foreach (var criteria in _criteria)
-                {
-                    if (!db.DocumentCriteria.Any(c => c.Id == criteria.Id))
-                        db.DocumentCriteria.Add(criteria);
-                }
-                db.SaveChanges();
-            }
+    internal sealed class Configuration : DbMigrationsConfiguration<Classifier.Data.ClassifierContext>
+    {
+        public Configuration()
+        {
+            AutomaticMigrationsEnabled = false;
         }
 
-        protected override void Down(MigrationBuilder migrationBuilder)
+        protected override void Seed(Classifier.Data.ClassifierContext context)
         {
-            migrationBuilder.AddColumn<long>(
-                name: "MaxScore",
-                table: "DocumentTypes",
-                nullable: false,
-                defaultValue: 0L);
-
-            migrationBuilder.AddColumn<long>(
-                name: "MinScore",
-                table: "DocumentTypes",
-                nullable: false,
-                defaultValue: 0L);
-            
-            using (var db = new DataContext())
+            foreach(var type in _documentTypes)
             {
-                db.DocumentTypes.RemoveRange(_documentTypes);
-                db.DocumentCriteria.RemoveRange(_criteria);
-                db.SaveChanges();
+                context.DocumentTypes.AddOrUpdate(c => c.Id, type);
+            }
+            foreach(var criteria in _criteria)
+            {
+                context.DocumentCriteria.AddOrUpdate(c => c.Id, criteria);
             }
         }
 

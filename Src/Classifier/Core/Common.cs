@@ -135,7 +135,7 @@ namespace Classifier.Core
         {
             return Task.Run(() =>
             {
-                var criteriaDirectoryInfo = new DirectoryInfo(Common.CriteriaStorage);
+                var criteriaDirectoryInfo = new DirectoryInfo(CriteriaStorage);
                 var files = criteriaDirectoryInfo.GetFiles();
                 foreach (var file in files)
                 {
@@ -146,8 +146,8 @@ namespace Classifier.Core
                     var criterion = documentCriteria.Where(c => c.DocumentTypeId == type.Id).ToList();
                     foreach (var criteria in criterion)
                     {
-                        var image = Common.ConvertStringToImage(criteria.CriteriaBytes);
-                        var imagePath = Path.Combine(Common.CriteriaStorage, $"{type.DocumentType}-{criteria.CriteriaName}.png");
+                        var image = ConvertStringToImage(criteria.CriteriaBytes);
+                        var imagePath = Path.Combine(CriteriaStorage, $"{type.DocumentType}-{criteria.CriteriaName}.png");
                         image.Save(imagePath);
                     }
                 }
@@ -186,7 +186,21 @@ namespace Classifier.Core
                 using (var image = CvInvoke.Imread(o.FullName, ImreadModes.Grayscale))
                 {
                     var mdlImage = new Mat();
-                    CvInvoke.Threshold(image, mdlImage, 127, 255, ThresholdType.BinaryInv);
+                    try
+                    {
+                        CvInvoke.Threshold(image, mdlImage, 127.0, 255.0, ThresholdType.BinaryInv);
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            System.Windows.MessageBox.Show(ex.Message.Trim());
+                        });
+                    }
+                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        System.Windows.MessageBox.Show("Threshold complete");
+                    });
                     var uModelImage = mdlImage.GetUMat(AccessType.Read);
                     var modelDescriptors = new Mat();
                     var modelKeyPoints = new VectorOfKeyPoint();
@@ -208,7 +222,7 @@ namespace Classifier.Core
 
         public static void CreateImagePart(string filePath, DocumentCriteria criteria)
         {
-            var cropPath = Path.Combine(Common.TempStorage, "cropped.png");
+            var cropPath = Path.Combine(TempStorage, "cropped.png");
             if (File.Exists(cropPath)) File.Delete(cropPath);
             using (var original = new Bitmap(filePath))
             {
