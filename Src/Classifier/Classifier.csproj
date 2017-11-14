@@ -92,7 +92,7 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>C5F4F16E4159606CC0AB109160135E6C392AAFC7</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>8FF929670863E6189093FD6C4086F4664D8E7437</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <ManifestKeyFile>Classifier_TemporaryKey.pfx</ManifestKeyFile>
@@ -614,16 +614,6 @@
       <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
     </PublishFile>
-    <PublishFile Include="Emgu.CV.UI.dll">
-      <Visible>False</Visible>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
-      <PublishState>Exclude</PublishState>
-      <IncludeHash>False</IncludeHash>
-      <FileType>File</FileType>
-    </PublishFile>
     <PublishFile Include="Emgu.CV.World">
       <Visible>False</Visible>
       <Group>
@@ -633,16 +623,6 @@
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
-    </PublishFile>
-    <PublishFile Include="Emgu.CV.World.dll">
-      <Visible>False</Visible>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
-      <PublishState>Exclude</PublishState>
-      <IncludeHash>False</IncludeHash>
-      <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="en\Microsoft.Expression.Interactions.resources">
       <Visible>False</Visible>
@@ -1913,8 +1893,6 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Emgu.CV.UI.dll" />
-    <Content Include="Emgu.CV.World.dll" />
     <Content Include="x64\concrt140.dll" />
     <Content Include="x64\cvextern.dll" />
     <Content Include="x64\msvcp140.dll" />
