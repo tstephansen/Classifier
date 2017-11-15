@@ -1,20 +1,10 @@
-﻿using Classifier.Models;
-using Emgu.CV;
+﻿using Emgu.CV;
 using Emgu.CV.CvEnum;
 using Emgu.CV.Features2D;
 using Emgu.CV.Flann;
-using Emgu.CV.ML;
 using Emgu.CV.Structure;
 using Emgu.CV.Util;
 using Emgu.CV.XFeatures2D;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Classifier.Core
 {
@@ -32,10 +22,6 @@ namespace Classifier.Core
                 CvInvoke.Threshold(observedImage, obsImage, 127.0, 255.0, ThresholdType.BinaryInv);
                 using (UMat uObservedImage = obsImage.GetUMat(AccessType.Read))
                 {
-                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
-                    {
-                        System.Windows.MessageBox.Show("Got umat");
-                    });
                     switch (detectionType)
                     {
                         default:

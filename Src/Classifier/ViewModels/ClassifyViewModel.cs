@@ -165,35 +165,25 @@ namespace Classifier.ViewModels
         {
             return Task.Run(() =>
             {
-                try
+                var files = new List<FileInfo>();
+                PdfFiles.ForEach(c => files.Add(new FileInfo(c)));
+                var pdfFiles = files.Where(c => c.Extension == ".pdf").ToList();
+                Parallel.ForEach(pdfFiles, (file) =>
                 {
-                    var files = new List<FileInfo>();
-                    PdfFiles.ForEach(c => files.Add(new FileInfo(c)));
-                    var pdfFiles = files.Where(c => c.Extension == ".pdf").ToList();
-                    Parallel.ForEach(pdfFiles, (file) =>
+                    using (var viewer = new PdfDocumentView())
                     {
-                        using (var viewer = new PdfDocumentView())
+                        viewer.Load(file.FullName);
+                        var images = viewer.LoadedDocument.ExportAsImage(0, viewer.PageCount - 1, new SizeF(1428, 1848), true);
+                        var imgCount = 1;
+                        foreach (var image in images)
                         {
-                            viewer.Load(file.FullName);
-                            var images = viewer.LoadedDocument.ExportAsImage(0, viewer.PageCount - 1, new SizeF(1428, 1848), true);
-                            var imgCount = 1;
-                            foreach (var image in images)
-                            {
-                                var imgPath = Path.Combine(Common.TempStorage, $"{file.Name.Substring(0, file.Name.Length - 4)}.{imgCount}.png");
-                                PdfImages.Add(imgPath, file.FullName);
-                                image.Save(imgPath);
-                                imgCount++;
-                            }
+                            var imgPath = Path.Combine(Common.TempStorage, $"{file.Name.Substring(0, file.Name.Length - 4)}.{imgCount}.png");
+                            PdfImages.Add(imgPath, file.FullName);
+                            image.Save(imgPath);
+                            imgCount++;
                         }
-                    });
-                }
-                catch(Exception ex)
-                {
-                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
-                    {
-                        System.Windows.MessageBox.Show(ex.Message.Trim());
-                    });
-                }
+                    }
+                });
             });
         }
         #endregion
@@ -236,15 +226,7 @@ namespace Classifier.ViewModels
                 documentCriteria = context.DocumentCriteria.ToList();
             }
             await Common.CreateCriteriaFilesAsync(documentCriteria, types);
-            System.Windows.Application.Current.Dispatcher.Invoke(() =>
-            {
-                System.Windows.MessageBox.Show("Setting Criteria.");
-            });
             SetNamingAndCriteria();
-            System.Windows.Application.Current.Dispatcher.Invoke(() =>
-            {
-                System.Windows.MessageBox.Show("Criteria set.");
-            });
             var tempDirectoryInfo = new DirectoryInfo(Common.TempStorage);
             var files = tempDirectoryInfo.GetFiles();
             var pc = new ETACalculator(3, 30);
@@ -261,19 +243,11 @@ namespace Classifier.ViewModels
             var fileCount = Convert.ToDouble(files.Count);
             return Task.Run(() =>
             {
-                System.Windows.Application.Current.Dispatcher.Invoke(() =>
-                {
-                    System.Windows.MessageBox.Show("Starting CV.");
-                });
                 foreach (var file in files)
                 {
                     var criteriaMatches = types.Select(o => new CriteriaMatchModel { DocumentType = o }).ToList();
                     using (var observedImage = CvInvoke.Imread(file.FullName))
                     {
-                        System.Windows.Application.Current.Dispatcher.Invoke(() =>
-                        {
-                            System.Windows.MessageBox.Show("Observed image created..");
-                        });
                         Parallel.ForEach(_criteriaImages, (criteriaImage) =>
                         {
                             var criteriaFile = criteriaImage.Info;
@@ -291,6 +265,7 @@ namespace Classifier.ViewModels
                     if (token.IsCancellationRequested)
                         return;
                     var matchedCriteria = criteriaMatches.First(c => c.Score == criteriaMatches.Max(p => p.Score));
+                    Console.WriteLine($"Score: {matchedCriteria.Score}");
                     if (matchedCriteria.Score >= matchedCriteria.DocumentType.AverageScore)
                     {
                         matchedCriteria.MatchedFileInfo = file;
@@ -326,10 +301,6 @@ namespace Classifier.ViewModels
 
         public long ClassifyFast(CriteriaImageModel model, Mat observedImage)
         {
-            System.Windows.Application.Current.Dispatcher.Invoke(() =>
-            {
-                System.Windows.MessageBox.Show("Classify fast..");
-            });
             var score = 0L;
             score = DocClass.Classify(model.ModelKeyPoints, model.ModelDescriptors, observedImage, UniquenessThreshold, KNearest, SelectedDetectionMethod);
             return score;

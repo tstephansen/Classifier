@@ -186,21 +186,7 @@ namespace Classifier.Core
                 using (var image = CvInvoke.Imread(o.FullName, ImreadModes.Grayscale))
                 {
                     var mdlImage = new Mat();
-                    try
-                    {
-                        CvInvoke.Threshold(image, mdlImage, 127.0, 255.0, ThresholdType.BinaryInv);
-                    }
-                    catch (Exception ex)
-                    {
-                        System.Windows.Application.Current.Dispatcher.Invoke(() =>
-                        {
-                            System.Windows.MessageBox.Show(ex.Message.Trim());
-                        });
-                    }
-                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
-                    {
-                        System.Windows.MessageBox.Show("Threshold complete");
-                    });
+                    CvInvoke.Threshold(image, mdlImage, 127.0, 255.0, ThresholdType.BinaryInv);
                     var uModelImage = mdlImage.GetUMat(AccessType.Read);
                     var modelDescriptors = new Mat();
                     var modelKeyPoints = new VectorOfKeyPoint();

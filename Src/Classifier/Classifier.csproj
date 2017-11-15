@@ -14,7 +14,7 @@
     <WarningLevel>4</WarningLevel>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <IsWebBootstrapper>false</IsWebBootstrapper>
-    <PublishUrl>\\SVR300-003\yca\Project Software\Classifier\</PublishUrl>
+    <PublishUrl>\\NAS\Software\Published Apps\Classifier\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Unc</InstallFrom>
     <UpdateEnabled>true</UpdateEnabled>
@@ -26,8 +26,10 @@
     <MapFileExtensions>true</MapFileExtensions>
     <ProductName>Classifier</ProductName>
     <PublisherName>Yokogawa Corporation of America</PublisherName>
+    <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
+    <WebPage>publish.htm</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>1</ApplicationRevision>
+    <ApplicationRevision>14</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
@@ -54,10 +56,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>3D5BF563384CB731B6CCDF76D4EA9E7ABA424794</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>32B2D401DC8A0554362EFB070B58AFE6E973B1A1</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestKeyFile>Classifier_TemporaryKey.pfx</ManifestKeyFile>
+    <ManifestKeyFile>Classifier_1_TemporaryKey.pfx</ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
     <GenerateManifests>true</GenerateManifests>
@@ -105,6 +107,9 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>AppIcon.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="ClosedXML, Version=0.90.0.0, Culture=neutral, PublicKeyToken=fd1eb21b62ae805b, processorArchitecture=MSIL">
       <HintPath>..\..\packages\ClosedXML.0.90.0\lib\net452\ClosedXML.dll</HintPath>
@@ -117,6 +122,9 @@
     </Reference>
     <Reference Include="Emgu.CV.UI">
       <HintPath>..\..\libs\Emgu\Emgu.CV.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="Emgu.CV.UI.GL">
+      <HintPath>..\..\libs\Emgu\Emgu.CV.UI.GL.dll</HintPath>
     </Reference>
     <Reference Include="Emgu.CV.World">
       <HintPath>..\..\libs\Emgu\Emgu.CV.World.dll</HintPath>
@@ -225,6 +233,7 @@
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.IO.FileSystem.Primitives, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\..\packages\System.IO.FileSystem.Primitives.4.0.1\lib\net46\System.IO.FileSystem.Primitives.dll</HintPath>
@@ -262,6 +271,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Data\ClassifierContextInitializer.cs" />
     <Compile Include="Migrations\201711141743021_InitialMigration.cs" />
     <Compile Include="Migrations\201711141743021_InitialMigration.Designer.cs">
       <DependentUpon>201711141743021_InitialMigration.cs</DependentUpon>
@@ -367,21 +377,6 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Content Include="x86\concrt140.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="x86\cvextern.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="x86\msvcp140.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="x86\opencv_ffmpeg330.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="x86\vcruntime140.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <EmbeddedResource Include="Migrations\201711141743021_InitialMigration.resx">
       <DependentUpon>201711141743021_InitialMigration.cs</DependentUpon>
     </EmbeddedResource>
@@ -395,31 +390,11 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
-    <Content Include="x64\cvextern.lib">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="x64\concrt140.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="x64\cvextern.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="x64\msvcp140.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="x64\opencv_ffmpeg330_64.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="x64\vcruntime140.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.6.2">
@@ -432,14 +407,9 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Visual.C++.14.0.x64">
+    <BootstrapperPackage Include="Microsoft.SqlServer.SqlLocalDB.11.1">
       <Visible>False</Visible>
-      <ProductName>Visual C++ "14" Runtime Libraries %28x64%29</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Visual.C++.14.0.x86">
-      <Visible>False</Visible>
-      <ProductName>Visual C++ "14" Runtime Libraries %28x86%29</ProductName>
+      <ProductName>SQL Server 2012 Express LocalDB</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
@@ -450,8 +420,8 @@
       </Group>
       <TargetPath>
       </TargetPath>
-      <PublishState>Include</PublishState>
-      <IncludeHash>True</IncludeHash>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>False</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="ClosedXML">
@@ -470,8 +440,8 @@
       </Group>
       <TargetPath>
       </TargetPath>
-      <PublishState>Include</PublishState>
-      <IncludeHash>True</IncludeHash>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>False</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="DocumentFormat.OpenXml">
@@ -500,11 +470,21 @@
       </Group>
       <TargetPath>
       </TargetPath>
-      <PublishState>Include</PublishState>
-      <IncludeHash>True</IncludeHash>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>False</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="Emgu.CV.UI">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>Assembly</FileType>
+    </PublishFile>
+    <PublishFile Include="Emgu.CV.UI.GL">
       <Visible>False</Visible>
       <Group>
       </Group>
@@ -520,8 +500,8 @@
       </Group>
       <TargetPath>
       </TargetPath>
-      <PublishState>Include</PublishState>
-      <IncludeHash>True</IncludeHash>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>False</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="Emgu.CV.World">
@@ -540,8 +520,8 @@
       </Group>
       <TargetPath>
       </TargetPath>
-      <PublishState>Include</PublishState>
-      <IncludeHash>True</IncludeHash>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>False</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="EntityFramework">
@@ -620,8 +600,8 @@
       </Group>
       <TargetPath>
       </TargetPath>
-      <PublishState>Include</PublishState>
-      <IncludeHash>True</IncludeHash>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>False</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="MaterialDesignThemes.Wpf">
@@ -640,8 +620,8 @@
       </Group>
       <TargetPath>
       </TargetPath>
-      <PublishState>Include</PublishState>
-      <IncludeHash>True</IncludeHash>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>False</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="Microsoft.Practices.ServiceLocation">
@@ -660,8 +640,8 @@
       </Group>
       <TargetPath>
       </TargetPath>
-      <PublishState>Include</PublishState>
-      <IncludeHash>True</IncludeHash>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>False</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="Microsoft.WindowsAPICodePack">
@@ -1055,25 +1035,27 @@
       <FileType>Satellite</FileType>
     </PublishFile>
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="AppIcon.ico" />
+    <Content Include="x64\concrt140.dll" />
+    <Content Include="x64\cvextern.dll" />
+    <Content Include="x64\cvextern.lib" />
+    <Content Include="x64\msvcp140.dll" />
+    <Content Include="x64\opencv_ffmpeg330_64.dll" />
+    <Content Include="x64\vcruntime140.dll" />
+    <Content Include="x86\concrt140.dll" />
+    <Content Include="x86\cvextern.dll" />
+    <Content Include="x86\msvcp140.dll" />
+    <Content Include="x86\opencv_ffmpeg330.dll" />
+    <Content Include="x86\vcruntime140.dll" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>if $(PlatformName) == x8Y6 (
-xcopy /Y "$(SolutionDir)libs\Emgu\x86\concrt140.dll" "$(TargetDir)"
-xcopy /Y "$(SolutionDir)libs\Emgu\x86\cvextern.dll" "$(TargetDir)"
-xcopy /Y "$(SolutionDir)libs\Emgu\x86\msvcp140.dll" "$(TargetDir)"
-xcopy /Y "$(SolutionDir)libs\Emgu\x86\opencv_ffmpeg330.dll" "$(TargetDir)"
-xcopy /Y "$(SolutionDir)libs\Emgu\x86\vcruntime140.dll" "$(TargetDir)"
-)
-if $(PlatformName) == x6Y4 (
-xcopy /Y "$(SolutionDir)libs\Emgu\x64\concrt140.dll" "$(TargetDir)"
-xcopy /Y "$(SolutionDir)libs\Emgu\x64\cvextern.dll" "$(TargetDir)"
-xcopy /Y "$(SolutionDir)libs\Emgu\x64\cvextern.lib" "$(TargetDir)"
-xcopy /Y "$(SolutionDir)libs\Emgu\x64\cvextern.dll" "$(TargetDir)x64"
-xcopy /Y "$(SolutionDir)libs\Emgu\x64\cvextern.lib" "$(TargetDir)x64"
-xcopy /Y "$(SolutionDir)libs\Emgu\x64\msvcp140.dll" "$(TargetDir)"
-xcopy /Y "$(SolutionDir)libs\Emgu\x64\opencv_ffmpeg330_64.dll" "$(TargetDir)"
-xcopy /Y "$(SolutionDir)libs\Emgu\x64\opencv_ffmpeg330_64.dll" "$(TargetDir)x64"
-xcopy /Y "$(SolutionDir)libs\Emgu\x64\vcruntime140.dll" "$(TargetDir)"
-)</PostBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PreBuildEvent>
+    </PreBuildEvent>
   </PropertyGroup>
 </Project>
