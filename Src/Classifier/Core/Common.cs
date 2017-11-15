@@ -6,6 +6,9 @@ using Emgu.CV.CvEnum;
 using Emgu.CV.Util;
 using Emgu.CV.XFeatures2D;
 using Microsoft.Win32;
+using Syncfusion.Pdf;
+using Syncfusion.Pdf.Graphics;
+using Syncfusion.Pdf.Parsing;
 using Syncfusion.Windows.Forms.PdfViewer;
 using System;
 using System.Collections.Generic;
@@ -15,12 +18,14 @@ using System.Drawing.Drawing2D;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Classifier.Core
 {
     public static class Common
     {
+        #region File Methods
         public static OpenFileDialog BrowseForFiles(string filter)
         {
             return BrowseForFiles(false, filter);
@@ -43,49 +48,6 @@ namespace Classifier.Core
                 Multiselect = multiSelect
             };
             return filesDialog;
-        }
-
-        public static void Resize(string imageFile, string outputFile, double scaleFactor)
-        {
-            using (var srcImage = Image.FromFile(imageFile))
-            {
-                var newWidth = (int)(srcImage.Width * scaleFactor);
-                var newHeight = (int)(srcImage.Height * scaleFactor);
-                using (var newImage = new Bitmap(newWidth, newHeight))
-                using (var graphics = Graphics.FromImage(newImage))
-                {
-                    graphics.SmoothingMode = SmoothingMode.AntiAlias;
-                    graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                    graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
-                    graphics.DrawImage(srcImage, new Rectangle(0, 0, newWidth, newHeight));
-                    newImage.Save(outputFile);
-                }
-            }
-        }
-
-        public static Bitmap ConvertStringToImage(string base64String)
-        {
-            Image image;
-            var bytes = Convert.FromBase64String(base64String);
-            using (var ms = new MemoryStream(bytes))
-            {
-                image = Image.FromStream(ms);
-            }
-            return (Bitmap)image;
-        }
-
-        public static string CreateStringFromImage(string filePath)
-        {
-            using (Image image = Image.FromFile(filePath))
-            {
-                using (MemoryStream m = new MemoryStream())
-                {
-                    image.Save(m, image.RawFormat);
-                    var imageBytes = m.ToArray();
-                    var base64String = Convert.ToBase64String(imageBytes);
-                    return base64String;
-                }
-            }
         }
 
         public static Task<DataTable> GetSpreadsheetDataTableAsync(string spreadsheetPath, string spreadsheetName)
@@ -129,6 +91,51 @@ namespace Classifier.Core
                 firstHeadRow++;
             }
             return datatable;
+        }
+        #endregion
+
+
+        public static void Resize(string imageFile, string outputFile, double scaleFactor)
+        {
+            using (var srcImage = Image.FromFile(imageFile))
+            {
+                var newWidth = (int)(srcImage.Width * scaleFactor);
+                var newHeight = (int)(srcImage.Height * scaleFactor);
+                using (var newImage = new Bitmap(newWidth, newHeight))
+                using (var graphics = Graphics.FromImage(newImage))
+                {
+                    graphics.SmoothingMode = SmoothingMode.AntiAlias;
+                    graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                    graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                    graphics.DrawImage(srcImage, new Rectangle(0, 0, newWidth, newHeight));
+                    newImage.Save(outputFile);
+                }
+            }
+        }
+
+        public static Bitmap ConvertStringToImage(string base64String)
+        {
+            Image image;
+            var bytes = Convert.FromBase64String(base64String);
+            using (var ms = new MemoryStream(bytes))
+            {
+                image = Image.FromStream(ms);
+            }
+            return (Bitmap)image;
+        }
+
+        public static string CreateStringFromImage(string filePath)
+        {
+            using (Image image = Image.FromFile(filePath))
+            {
+                using (MemoryStream m = new MemoryStream())
+                {
+                    image.Save(m, image.RawFormat);
+                    var imageBytes = m.ToArray();
+                    var base64String = Convert.ToBase64String(imageBytes);
+                    return base64String;
+                }
+            }
         }
 
         public static Task CreateCriteriaFilesAsync(List<DocumentCriteria> documentCriteria, List<DocumentTypes> types)
@@ -250,18 +257,210 @@ namespace Classifier.Core
             return value;
         }
 
+        public static List<DocumentSelectionModel> LoadDocumentSelectionModels()
+        {
+            var documentSelectionList = new List<DocumentSelectionModel>();
+            using (var context = new ClassifierContext())
+            {
+                var documentTypes = context.DocumentTypes.ToList();
+                foreach (var o in documentTypes)
+                {
+                    documentSelectionList.Add(new DocumentSelectionModel { DocumentTypeId = o.Id, DocumentType = o.DocumentType, Selected = true });
+                }
+            }
+            return documentSelectionList;
+        }
+
+        public static Task<Dictionary<string, string>> CopyImagesToTempFolderAsync(IEnumerable<string> pdfFiles)
+        {
+            return Task.Run(() =>
+            {
+                var pdfImages = new Dictionary<string, string>();
+                var files = new List<FileInfo>();
+                pdfFiles.ForEach(c => files.Add(new FileInfo(c)));
+                foreach (var file in files.Where(c => c.Extension == ".png"))
+                {
+                    var copyPath = Path.Combine(TempStorage, file.Name);
+                    File.Copy(file.FullName, copyPath);
+                    pdfImages.Add(copyPath, file.FullName);
+                }
+                return pdfImages;
+            });
+        }
+
+        public static Task<Dictionary<string, string>> CopyImagesToTempFolderAsync(FileInfo file)
+        {
+            return Task.Run(() =>
+            {
+                var pdfImages = new Dictionary<string, string>();
+                var copyPath = Path.Combine(TempStorage, file.Name);
+                File.Copy(file.FullName, copyPath);
+                pdfImages.Add(copyPath, file.FullName);
+                return pdfImages;
+            });
+        }
+
+        public static (List<FileNamingModel>, List<CriteriaImageModel>) SetNamingAndCriteria(string namingSpreadsheetPath)
+        {
+            var criteriaImages = new List<CriteriaImageModel>();
+            var namingModels = new List<FileNamingModel>();
+            if (!string.IsNullOrWhiteSpace(namingSpreadsheetPath))
+            {
+                var spreadsheetDataTable = GetSpreadsheetDataTable(namingSpreadsheetPath, "Reference");
+                if (spreadsheetDataTable != null)
+                {
+                    
+                    foreach (DataRow dr in spreadsheetDataTable.Rows)
+                    {
+                        var serial = string.Empty;
+                        var tag = string.Empty;
+                        if (!string.IsNullOrWhiteSpace(dr["Serial"].ToString()))
+                            serial = dr["Serial"].ToString();
+                        if (!string.IsNullOrWhiteSpace(dr["Tag"].ToString()))
+                            tag = dr["Tag"].ToString();
+                        namingModels.Add(new FileNamingModel { Serial = serial, Tag = tag });
+                    }
+                }
+            }
+            var criteriaDirectoryInfo = new DirectoryInfo(CriteriaStorage);
+            var criteriaFiles = criteriaDirectoryInfo.GetFiles();
+            var images = CreateCriteriaArrays(criteriaFiles);
+            criteriaImages.AddRange(images);
+            return (namingModels, criteriaImages);
+        }
+
+        public static Task<Dictionary<string, string>> ConvertPdfsToImagesAsync(IEnumerable<string> pdfFiles)
+        {
+            return Task.Run(() =>
+            {
+                var pdfImages = new Dictionary<string, string>();
+                var files = new List<FileInfo>();
+                pdfFiles.ForEach(c => files.Add(new FileInfo(c)));
+                var pdfFilesList = files.Where(c => c.Extension == ".pdf").ToList();
+                Parallel.ForEach(pdfFilesList, (file) =>
+                {
+                    using (var viewer = new PdfDocumentView())
+                    {
+                        viewer.Load(file.FullName);
+                        var images = viewer.LoadedDocument.ExportAsImage(0, viewer.PageCount - 1, new SizeF(1428, 1848), true);
+                        var imgCount = 1;
+                        foreach (var image in images)
+                        {
+                            var imgPath = Path.Combine(TempStorage, $"{file.Name.Substring(0, file.Name.Length - 4)}.{imgCount}.png");
+                            pdfImages.Add(imgPath, file.FullName);
+                            image.Save(imgPath);
+                            imgCount++;
+                        }
+                    }
+                });
+                return pdfImages;
+            });
+        }
+
+        public static Task SaveMatchedFilesAsync(List<CriteriaMatchModel> matchedFiles, List<FileNamingModel> namingModels, Dictionary<string, string> pdfImages, IEnumerable<string> pdfFiles, CancellationToken token)
+        {
+            return Task.Run(() =>
+            {
+                foreach (var item in matchedFiles)
+                {
+                    if (token.IsCancellationRequested)
+                        return;
+                    var fileNameWithPage = item.MatchedFileInfo.Name.Substring(0, item.MatchedFileInfo.Name.Length - 4);
+                    var fileNameSplit = fileNameWithPage.Split('.');
+                    var fileName = fileNameSplit[0];
+                    var matchedFile = pdfFiles.First(c => c.Contains(fileName));
+                    var matchedFileExtension = matchedFile.Substring(matchedFile.Length - 3);
+                    if (matchedFileExtension.Equals("pdf", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        ExtractPageFromPdf(item.MatchedFileInfo, item.DocumentType.DocumentType, pdfImages, namingModels);
+                    }
+                    else
+                    {
+                        CreatePdfFromImage(item.MatchedFileInfo, item.DocumentType.DocumentType, pdfImages, namingModels);
+                    }
+                }
+            });
+        }
+
+        public static void ExtractPageFromPdf(FileInfo file, string type, Dictionary<string, string> pdfImages, List<FileNamingModel> models = null)
+        {
+            var fileName = file.Name.Substring(0, file.Name.Length - 4);
+            if (models != null)
+            {
+                var fileNameSplit = fileName.Split('.');
+                var serialNumber = fileNameSplit[0];
+                var model = models.FirstOrDefault(c => c.Serial == serialNumber);
+                if (model != null)
+                {
+                    fileName = model.Tag;
+                }
+            }
+            var origPdf = pdfImages.First(c => c.Key == file.FullName);
+            var imagePath = origPdf.Key.Replace(".png", "");
+            var pageSplit = imagePath.Split('.');
+            var page = Convert.ToInt32(pageSplit[pageSplit.Length - 1]);
+            var loadedDocument = new PdfLoadedDocument(origPdf.Value);
+
+            var resultPath = Path.Combine(ResultsStorage, type);
+            using (var document = new PdfDocument())
+            {
+                var startIndex = page - 1;
+                var endIndex = page - 1;
+                document.ImportPageRange(loadedDocument, startIndex, endIndex);
+                var savePath = Path.Combine(resultPath, $"{fileName}.pdf");
+                if (File.Exists(savePath))
+                {
+                    savePath = Path.Combine(resultPath, $"{fileName}-1.pdf");
+                }
+                document.Save(savePath);
+                loadedDocument.Close(true);
+                document.Close(true);
+            }
+        }
+
+        public static void CreatePdfFromImage(FileInfo file, string type, Dictionary<string, string> pdfImages, List<FileNamingModel> models = null)
+        {
+            var fileName = file.Name.Substring(0, file.Name.Length - 4);
+            if (models != null)
+            {
+                var fileNameSplit = fileName.Split('.');
+                var serialNumber = fileNameSplit[0];
+                var model = models.FirstOrDefault(c => c.Serial == serialNumber);
+                if (model != null)
+                {
+                    fileName = model.Tag;
+                }
+            }
+            var origPdf = pdfImages.First(c => c.Key == file.FullName);
+            var resultPath = Path.Combine(ResultsStorage, type);
+            using (var pdf = new PdfDocument())
+            {
+                var section = pdf.Sections.Add();
+                var image = new PdfBitmap(origPdf.Key);
+                var frameCount = image.FrameCount;
+                for (var i = 0; i < frameCount; i++)
+                {
+                    var page = section.Pages.Add();
+                    section.PageSettings.Margins.All = 0;
+                    var graphics = page.Graphics;
+                    image.ActiveFrame = i;
+                    graphics.DrawImage(image, 0, 0, page.GetClientSize().Width, page.GetClientSize().Height);
+                }
+                var savePath = Path.Combine(resultPath, $"{fileName}.pdf");
+                if (File.Exists(savePath))
+                {
+                    savePath = Path.Combine(resultPath, $"{fileName}-1.pdf");
+                }
+                pdf.Save(savePath);
+                pdf.Close(true);
+            }
+        }
+
         public static readonly string AppStorage = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\Classifier";
         public static readonly string TempStorage = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\Classifier\\temp";
         public static readonly string PdfPath = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\Classifier\\PDFs";
         public static readonly string CriteriaStorage = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\Classifier\\Criteria";
         public static readonly string UserCriteriaStorage = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\Classifier\\UserCriteria";
         public static readonly string ResultsStorage = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\Classifier\\Results";
-
-        //public static readonly string AppStorage = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\DocumentClassifier";
-        //public static readonly string TempStorage = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\DocumentClassifier\\temp";
-        //public static readonly string PdfPath = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\DocumentClassifier\\PDFs";
-        //public static readonly string CriteriaStorage = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\DocumentClassifier\\Criteria";
-        //public static readonly string UserCriteriaStorage = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\DocumentClassifier\\UserCriteria";
-        //public static readonly string ResultsStorage = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\DocumentClassifier\\Results";
     }
 }

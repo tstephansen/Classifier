@@ -2,6 +2,7 @@
 using Classifier.Data;
 using LandmarkDevs.Core.Infrastructure;
 using LandmarkDevs.Core.Shared;
+using Syncfusion.Windows.Forms.PdfViewer;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -17,7 +18,7 @@ namespace Classifier.ViewModels
     {
         public CriteriaCreatorViewModel()
         {
-            LoadImageCommand = new RelayCommand(LoadImage);
+            LoadImageCommand = new RelayCommand(LoadFile);
             CreateCriteriaCommand = new RelayCommand(CreateCriteria);
             RefreshDocTypesCommand = new RelayCommand(RefreshDocTypes);
             SavedDialogOpen = false;
@@ -51,12 +52,20 @@ namespace Classifier.ViewModels
             }
         }
 
-        public void LoadImage()
+        public void LoadFile()
         {
-            var files = Common.BrowseForFiles("PNG (*.png)|*.png");
+            var files = Common.BrowseForFiles("PDF (*.pdf)|*.pdf|PNG (*.png)|*.png");
             if (files.ShowDialog() != true)
                 return;
+            var fileInfo = new FileInfo(files.FileName);
             FilePath = files.FileName;
+            if (fileInfo.Extension == ".pdf")
+            {
+                if (string.IsNullOrWhiteSpace(PdfPageNumber)) return;
+                PageNumber = Convert.ToInt32(PdfPageNumber);
+                var imgPath = ConvertPdfToImage(fileInfo.FullName);
+                FilePath = imgPath;
+            }
             var bmp = new System.Windows.Media.Imaging.BitmapImage();
             bmp.BeginInit();
             bmp.UriSource = new Uri(FilePath);
@@ -76,6 +85,34 @@ namespace Classifier.ViewModels
             var width = Convert.ToInt32(ImageSource.Width);
             var height = Convert.ToInt32(ImageSource.Height);
             ImageSize = new Size(width, height);
+        }
+
+        public string ConvertPdfToImage(string inputFilePath)
+        {
+            var imgPath = string.Empty;
+            using (var viewer = new PdfDocumentView())
+            {
+                var file = new FileInfo(inputFilePath);
+                viewer.Load(file.FullName);
+                var images = viewer.ExportAsImage(PageNumber - 1, PageNumber - 1);
+                imgPath = Path.Combine(Common.TempStorage, $"{file.Name.Substring(0, file.Name.Length - 4)}.png");
+                var resizedPath = Path.Combine(Common.UserCriteriaStorage, $"{file.Name.Substring(0, file.Name.Length - 4)}-R.png");
+                var image = images[0];
+                if (File.Exists(imgPath)) File.Delete(imgPath);
+                image.Save(imgPath);
+                double scaleFactor = 0;
+                var resize = false;
+                using (var bmp = Image.FromFile(imgPath))
+                {
+                    if (bmp.Size.Width > 1428)
+                    {
+                        scaleFactor = 1428.0 / Convert.ToDouble(bmp.Size.Width);
+                        resize = true;
+                    }
+                }
+                if (resize) Common.Resize(imgPath, resizedPath, scaleFactor);
+            }
+            return imgPath;
         }
 
         public void CreateCriteria()
@@ -117,10 +154,30 @@ namespace Classifier.ViewModels
                 var originalHeight = original.Height;
                 var scaleFactorX = PreviewImageWidth / originalWidth;
                 var scaleFactorY = PreviewImageHeight / originalHeight;
-                var userWidth = ReleasePosition.X - InitialPosition.X;
-                var userHeight = ReleasePosition.Y - InitialPosition.Y;
-                var scaledPositionX = InitialPosition.X / scaleFactorX;
-                var scaledPositionY = InitialPosition.Y / scaleFactorY;
+                var userWidth = 0.0;
+                var userHeight = 0.0;
+                var scaledPositionX = 0.0;
+                var scaledPositionY = 0.0;
+                if(ReleasePosition.X < InitialPosition.X)
+                {
+                    userWidth = InitialPosition.X - ReleasePosition.X;
+                    scaledPositionX = ReleasePosition.X / scaleFactorX;
+                }
+                else
+                {
+                    userWidth = ReleasePosition.X - InitialPosition.X;
+                    scaledPositionX = InitialPosition.X / scaleFactorX;
+                }
+                if(ReleasePosition.Y < InitialPosition.Y)
+                {
+                    userHeight = InitialPosition.Y - ReleasePosition.Y;
+                    scaledPositionY = ReleasePosition.Y / scaleFactorY;
+                }
+                else
+                {
+                    userHeight = ReleasePosition.Y - InitialPosition.Y;
+                    scaledPositionY = InitialPosition.Y / scaleFactorY;
+                }
                 var scaledWidth = userWidth / scaleFactorX;
                 var scaledHeight = userHeight / scaleFactorY;
                 var scaledSize = new Size(Convert.ToInt32(scaledWidth), Convert.ToInt32(scaledHeight));
@@ -137,7 +194,6 @@ namespace Classifier.ViewModels
                 var imageString = Common.CreateStringFromImage(savePath);
                 saved = AddCriteriaToDatabase(imageString, expandedWidth, expandedHeight, expandedX, expandedY, originalWidth, originalHeight);
             }
-            //LoadCriteriaResult(savePath);
             return saved;
         }
 
@@ -258,6 +314,20 @@ namespace Classifier.ViewModels
 
         public double PreviewImageWidth { get; set; }
         public double PreviewImageHeight { get; set; }
+
+        public string PdfPageNumber
+        {
+            get => _pdfPageNumber;
+            set => Set(ref _pdfPageNumber, value);
+        }
+        private string _pdfPageNumber;
+
+        public int PageNumber
+        {
+            get => _pageNumber;
+            set => Set(ref _pageNumber, value);
+        }
+        private int _pageNumber;
         #endregion
     }
 }

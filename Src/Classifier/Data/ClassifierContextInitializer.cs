@@ -16,10 +16,10 @@ namespace Classifier.Data
             {
                 context.DocumentTypes.AddOrUpdate(c => c.Id, type);
             }
-            foreach (var criteria in _criteria)
-            {
-                context.DocumentCriteria.AddOrUpdate(c => c.Id, criteria);
-            }
+            //foreach (var criteria in _criteria)
+            //{
+            //    context.DocumentCriteria.AddOrUpdate(c => c.Id, criteria);
+            //}
         }
 
         private List<DocumentTypes> _documentTypes => new List<DocumentTypes>
@@ -57,7 +57,7 @@ namespace Classifier.Data
             new DocumentTypes
             {
                 Id = new Guid("E8459FE4-C411-11E7-8E60-2C4026748198"),
-                DocumentType = "YCA Factory Calibration",
+                DocumentType = "YCA Pressure Calibration",
                 AverageScore = 300
             },
             new DocumentTypes

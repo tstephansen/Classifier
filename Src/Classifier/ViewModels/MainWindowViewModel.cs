@@ -34,6 +34,7 @@ namespace Classifier.ViewModels
             if (!Directory.Exists(Common.TempStorage)) Directory.CreateDirectory(Common.TempStorage);
             if (!Directory.Exists(Common.CriteriaStorage)) Directory.CreateDirectory(Common.CriteriaStorage);
             if (!Directory.Exists(Common.ResultsStorage)) Directory.CreateDirectory(Common.ResultsStorage);
+            if (!Directory.Exists(Common.UserCriteriaStorage)) Directory.CreateDirectory(Common.UserCriteriaStorage);
         }
     }
 }

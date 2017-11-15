@@ -67,14 +67,8 @@ namespace Classifier.ViewModels
 
         public void LoadDocumentTypes()
         {
-            using (var context = new ClassifierContext())
-            {
-                var documentTypes = context.DocumentTypes.ToList();
-                foreach (var o in documentTypes)
-                {
-                    DocumentSelectionList.Add(new DocumentSelectionModel { DocumentTypeId = o.Id, DocumentType = o.DocumentType, Selected = true });
-                }
-            }
+            var models = Common.LoadDocumentSelectionModels();
+            DocumentSelectionList = new ObservableCollection<DocumentSelectionModel>(models);
         }
 
         public static void GotoResultsFolder() => System.Diagnostics.Process.Start(Common.ResultsStorage);
@@ -117,75 +111,75 @@ namespace Classifier.ViewModels
             SelectedFile = null;
         }
 
-        private Task CopyImagesToTempFolderAsync()
-        {
-            return Task.Run(() =>
-            {
-                var files = new List<FileInfo>();
-                PdfFiles.ForEach(c => files.Add(new FileInfo(c)));
-                foreach (var file in files.Where(c => c.Extension == ".png"))
-                {
-                    var copyPath = Path.Combine(Common.TempStorage, file.Name);
-                    File.Copy(file.FullName, copyPath);
-                    PdfImages.Add(copyPath, file.FullName);
-                }
-            });
-        }
+        //private Task CopyImagesToTempFolderAsync()
+        //{
+        //    return Task.Run(() =>
+        //    {
+        //        var files = new List<FileInfo>();
+        //        PdfFiles.ForEach(c => files.Add(new FileInfo(c)));
+        //        foreach (var file in files.Where(c => c.Extension == ".png"))
+        //        {
+        //            var copyPath = Path.Combine(Common.TempStorage, file.Name);
+        //            File.Copy(file.FullName, copyPath);
+        //            PdfImages.Add(copyPath, file.FullName);
+        //        }
+        //    });
+        //}
         #endregion
 
         #region Pre Classification
-        public void SetNamingAndCriteria()
-        {
-            _criteriaImages = new List<CriteriaImageModel>();
-            if (!string.IsNullOrWhiteSpace(NamingSpreadsheetPath))
-            {
-                var spreadsheetDataTable = Common.GetSpreadsheetDataTable(NamingSpreadsheetPath, "Reference");
-                if (spreadsheetDataTable != null)
-                {
-                    NamingModels = new List<FileNamingModel>();
-                    foreach (DataRow dr in spreadsheetDataTable.Rows)
-                    {
-                        var serial = string.Empty;
-                        var tag = string.Empty;
-                        if (!string.IsNullOrWhiteSpace(dr["Serial"].ToString()))
-                            serial = dr["Serial"].ToString();
-                        if (!string.IsNullOrWhiteSpace(dr["Tag"].ToString()))
-                            tag = dr["Tag"].ToString();
-                        NamingModels.Add(new FileNamingModel { Serial = serial, Tag = tag });
-                    }
-                }
-            }
-            var criteriaDirectoryInfo = new DirectoryInfo(Common.CriteriaStorage);
-            var criteriaFiles = criteriaDirectoryInfo.GetFiles();
-            var images = Common.CreateCriteriaArrays(criteriaFiles);
-            _criteriaImages.AddRange(images);
-        }
+        //public void SetNamingAndCriteria()
+        //{
+        //    _criteriaImages = new List<CriteriaImageModel>();
+        //    if (!string.IsNullOrWhiteSpace(NamingSpreadsheetPath))
+        //    {
+        //        var spreadsheetDataTable = Common.GetSpreadsheetDataTable(NamingSpreadsheetPath, "Reference");
+        //        if (spreadsheetDataTable != null)
+        //        {
+        //            NamingModels = new List<FileNamingModel>();
+        //            foreach (DataRow dr in spreadsheetDataTable.Rows)
+        //            {
+        //                var serial = string.Empty;
+        //                var tag = string.Empty;
+        //                if (!string.IsNullOrWhiteSpace(dr["Serial"].ToString()))
+        //                    serial = dr["Serial"].ToString();
+        //                if (!string.IsNullOrWhiteSpace(dr["Tag"].ToString()))
+        //                    tag = dr["Tag"].ToString();
+        //                NamingModels.Add(new FileNamingModel { Serial = serial, Tag = tag });
+        //            }
+        //        }
+        //    }
+        //    var criteriaDirectoryInfo = new DirectoryInfo(Common.CriteriaStorage);
+        //    var criteriaFiles = criteriaDirectoryInfo.GetFiles();
+        //    var images = Common.CreateCriteriaArrays(criteriaFiles);
+        //    _criteriaImages.AddRange(images);
+        //}
 
-        public Task ConvertPdfsToImagesAsync()
-        {
-            return Task.Run(() =>
-            {
-                var files = new List<FileInfo>();
-                PdfFiles.ForEach(c => files.Add(new FileInfo(c)));
-                var pdfFiles = files.Where(c => c.Extension == ".pdf").ToList();
-                Parallel.ForEach(pdfFiles, (file) =>
-                {
-                    using (var viewer = new PdfDocumentView())
-                    {
-                        viewer.Load(file.FullName);
-                        var images = viewer.LoadedDocument.ExportAsImage(0, viewer.PageCount - 1, new SizeF(1428, 1848), true);
-                        var imgCount = 1;
-                        foreach (var image in images)
-                        {
-                            var imgPath = Path.Combine(Common.TempStorage, $"{file.Name.Substring(0, file.Name.Length - 4)}.{imgCount}.png");
-                            PdfImages.Add(imgPath, file.FullName);
-                            image.Save(imgPath);
-                            imgCount++;
-                        }
-                    }
-                });
-            });
-        }
+        //public Task ConvertPdfsToImagesAsync()
+        //{
+        //    return Task.Run(() =>
+        //    {
+        //        var files = new List<FileInfo>();
+        //        PdfFiles.ForEach(c => files.Add(new FileInfo(c)));
+        //        var pdfFiles = files.Where(c => c.Extension == ".pdf").ToList();
+        //        Parallel.ForEach(pdfFiles, (file) =>
+        //        {
+        //            using (var viewer = new PdfDocumentView())
+        //            {
+        //                viewer.Load(file.FullName);
+        //                var images = viewer.LoadedDocument.ExportAsImage(0, viewer.PageCount - 1, new SizeF(1428, 1848), true);
+        //                var imgCount = 1;
+        //                foreach (var image in images)
+        //                {
+        //                    var imgPath = Path.Combine(Common.TempStorage, $"{file.Name.Substring(0, file.Name.Length - 4)}.{imgCount}.png");
+        //                    PdfImages.Add(imgPath, file.FullName);
+        //                    image.Save(imgPath);
+        //                    imgCount++;
+        //                }
+        //            }
+        //        });
+        //    });
+        //}
         #endregion
 
         #region Classification Methods
@@ -211,8 +205,9 @@ namespace Classifier.ViewModels
                 ProgressText2 = exportProgress.ProgressText2;
             };
             ProgressText = "Creating PDF Files.";
-            await ConvertPdfsToImagesAsync();
-            await CopyImagesToTempFolderAsync();
+            await Common.ConvertPdfsToImagesAsync(PdfFiles);
+            var images = await Common.CopyImagesToTempFolderAsync(PdfFiles);
+            PdfImages = new Dictionary<string, string>(images);
             var types = new List<DocumentTypes>();
             List<DocumentCriteria> documentCriteria = null;
             using (var context = new ClassifierContext())
@@ -226,7 +221,9 @@ namespace Classifier.ViewModels
                 documentCriteria = context.DocumentCriteria.ToList();
             }
             await Common.CreateCriteriaFilesAsync(documentCriteria, types);
-            SetNamingAndCriteria();
+            var criteriaAndNaming = Common.SetNamingAndCriteria(NamingSpreadsheetPath);
+            NamingModels = new List<FileNamingModel>(criteriaAndNaming.Item1);
+            _criteriaImages = new List<CriteriaImageModel>(criteriaAndNaming.Item2);
             var tempDirectoryInfo = new DirectoryInfo(Common.TempStorage);
             var files = tempDirectoryInfo.GetFiles();
             var pc = new ETACalculator(3, 30);

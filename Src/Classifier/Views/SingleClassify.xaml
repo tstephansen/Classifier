@@ -1,0 +1,67 @@
+﻿<UserControl x:Class="Classifier.Views.SingleClassify"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:Classifier.ViewModels"
+             d:DesignHeight="600"
+             d:DesignWidth="800"
+             mc:Ignorable="d">
+    <UserControl.DataContext>
+        <vm:SingleClassifyViewModel />
+    </UserControl.DataContext>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <WrapPanel Grid.Row="0"
+                   HorizontalAlignment="Left"
+                   Orientation="Horizontal">
+            <Label Content="PDF:" />
+            <TextBox MinWidth="250"
+                     VerticalAlignment="Center"
+                     Text="{Binding PdfPath}" />
+            <Button Margin="5,0,0,0"
+                    VerticalAlignment="Center"
+                    Command="{Binding BrowseCommand}"
+                    Content="Get PDF" />
+            <Button Margin="5,0,0,0"
+                    VerticalAlignment="Center"
+                    Command="{Binding ReloadDocumentTypesCommand}"
+                    Content="Reload Doc. Types" />
+            <Button Margin="5,0,0,0"
+                    VerticalAlignment="Center"
+                    Command="{Binding ClassifyCommand}"
+                    Content="Classify"
+                    IsEnabled="{Binding ClassifyEnabled}" />
+            <Label Margin="10,0,0,0"
+                   VerticalAlignment="Center"
+                   Content="Uniqueness Threshold:" />
+            <TextBox MinWidth="50"
+                     VerticalAlignment="Center"
+                     Text="{Binding UniquenessThreshold}" />
+            <Label Margin="5,0,0,0"
+                   VerticalAlignment="Center"
+                   Content="KNN:" />
+            <TextBox MinWidth="50"
+                     VerticalAlignment="Center"
+                     Text="{Binding KNearest}" />
+        </WrapPanel>
+        <WrapPanel Grid.Row="1" Orientation="Horizontal">
+            <Button Command="{Binding SelectAllCommand}" Content="Select All" />
+            <Button Command="{Binding SelectNoneCommand}" Content="Select None" />
+        </WrapPanel>
+        <ListBox Grid.Row="2" ItemsSource="{Binding ViewSource}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <CheckBox IsChecked="{Binding Selected}" />
+                        <Label Margin="10,0,0,0" Content="{Binding DocumentType}" />
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </Grid>
+</UserControl>

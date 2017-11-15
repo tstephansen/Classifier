@@ -80,7 +80,8 @@ namespace Classifier.ViewModels
                     {
                         context.DocumentCriteria.Remove(o);
                     }
-                    context.DocumentTypes.Remove(SelectedDocumentType);
+                    var type = context.DocumentTypes.First(c => c.Id == SelectedDocumentType.Id);
+                    context.DocumentTypes.Remove(type);
                     context.SaveChanges();
                 }
                 LoadDocumentTypes();
@@ -93,7 +94,9 @@ namespace Classifier.ViewModels
             {
                 using(var context = new ClassifierContext())
                 {
-                    context.DocumentCriteria.Remove(SelectedCriteria);
+                    var item = context.DocumentCriteria.First(c => c.Id == SelectedCriteria.Id);
+                    context.DocumentCriteria.Remove(item);
+                    context.SaveChanges();
                 }
                 LoadCriterion();
             }
@@ -103,9 +106,11 @@ namespace Classifier.ViewModels
         {
             using(var context = new ClassifierContext())
             {
-                SelectedDocumentType.AverageScore = RequiredScore;
+                var item = context.DocumentTypes.First(c => c.Id == SelectedDocumentType.Id);
+                item.AverageScore = RequiredScore;
                 context.SaveChanges();
             }
+            LoadDocumentTypes();
         }
         #endregion
 
