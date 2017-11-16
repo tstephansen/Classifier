@@ -1,9 +1,13 @@
 ﻿using Classifier.Data;
+using Microsoft.SqlServer.Management.Common;
+using Microsoft.SqlServer.Management.Smo;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.Entity;
+using System.Data.SqlClient;
+using System.Deployment.Application;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -24,6 +28,33 @@ namespace Classifier
             if (!System.Diagnostics.Debugger.IsAttached)
             {
                 Copy64BitBinaries(currentDir);
+            }
+            var importData = false;
+            using(var context = new ClassifierContext())
+            {
+                var types = context.DocumentTypes.ToList();
+                if (types.Count == 0) importData = true;
+            }
+            if (importData)
+            {
+                try
+                {
+                    var script = File.ReadAllText(@"\\SVR300-003\yca\Project Software\Classifier.sql");
+                    var builder = new SqlConnectionStringBuilder(@"Server=(localdb)\v11.0;Integrated Security=true;AttachDbFileName=|DataDirectory|ClassifierDb.mdf;")
+                    {
+                        AttachDBFilename = System.Diagnostics.Debugger.IsAttached ? Path.Combine(Directory.GetCurrentDirectory(), "ClassifierDb.mdf") : Path.Combine(ApplicationDeployment.CurrentDeployment.DataDirectory, "ClassifierDb.mdf")
+                    };
+                    var connString = builder.ConnectionString;
+                    using (var conn = new SqlConnection(connString))
+                    {
+                        var server = new Server(new ServerConnection(conn));
+                        server.ConnectionContext.ExecuteNonQuery(script);
+                    }
+                }
+                catch(Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine(ex.Message.Trim());
+                }
             }
         }
 

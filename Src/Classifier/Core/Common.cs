@@ -94,7 +94,6 @@ namespace Classifier.Core
         }
         #endregion
 
-
         public static void Resize(string imageFile, string outputFile, double scaleFactor)
         {
             using (var srcImage = Image.FromFile(imageFile))

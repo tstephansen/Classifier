@@ -5,6 +5,10 @@ using ProgressItem = System.Collections.Generic.KeyValuePair<long, float>;
 
 namespace Classifier.Core
 {
+    /// <summary>
+    /// Credit goes to https://github.com/scottrippey/Progression/blob/master/Progression/Extras/ETACalculator.cs for this class.
+    /// All I did was change the code style to suit this project.
+    /// </summary>
     public interface IEtaCalculator
     {
         /// <summary>
@@ -41,6 +45,7 @@ namespace Classifier.Core
     /// (or more accurately, "Estimated Time of Completion"),
     /// based on a "rolling average" of progress over time.
     /// Credit goes to https://github.com/scottrippey/Progression/blob/master/Progression/Extras/ETACalculator.cs for this class.
+    /// All I did was change the code style to suit this project.
     /// </summary>
     public class EtaCalculator : IEtaCalculator
     {
