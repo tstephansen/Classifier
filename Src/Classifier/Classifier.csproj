@@ -29,7 +29,7 @@
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>14</ApplicationRevision>
+    <ApplicationRevision>16</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
@@ -45,6 +45,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -56,7 +57,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>3D5BF563384CB731B6CCDF76D4EA9E7ABA424794</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>32B2D401DC8A0554362EFB070B58AFE6E973B1A1</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <ManifestKeyFile>Classifier_TemporaryKey.pfx</ManifestKeyFile>
@@ -271,22 +272,18 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Data\ClassifierContextInitializer.cs" />
     <Compile Include="Data\ClassifierDbConfiguration.cs" />
     <Compile Include="Migrations\201711141743021_InitialMigration.cs" />
     <Compile Include="Migrations\201711141743021_InitialMigration.Designer.cs">
       <DependentUpon>201711141743021_InitialMigration.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
+    <Compile Include="Models\PdfFileModel.cs" />
     <Compile Include="ViewModels\ClassifyViewModel.cs" />
     <Compile Include="ViewModels\CriteriaCreatorViewModel.cs" />
     <Compile Include="ViewModels\DataManagementViewModel.cs" />
-    <Compile Include="ViewModels\HelpersViewModel.cs" />
-    <Compile Include="ViewModels\ImageResizerViewModel.cs" />
     <Compile Include="ViewModels\MainWindowViewModel.cs" />
     <Compile Include="ViewModels\SingleClassifyViewModel.cs" />
-    <Compile Include="ViewModels\TestingViewModel.cs" />
-    <Compile Include="ViewModels\TrainingViewModel.cs" />
     <Compile Include="Views\Classify.xaml.cs">
       <DependentUpon>Classify.xaml</DependentUpon>
     </Compile>
@@ -296,23 +293,11 @@
     <Compile Include="Views\DataManagement.xaml.cs">
       <DependentUpon>DataManagement.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\Helpers.xaml.cs">
-      <DependentUpon>Helpers.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Views\ImagePreviewWindow.xaml.cs">
       <DependentUpon>ImagePreviewWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\ImageResizer.xaml.cs">
-      <DependentUpon>ImageResizer.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Views\SingleClassify.xaml.cs">
       <DependentUpon>SingleClassify.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Views\Testing.xaml.cs">
-      <DependentUpon>Testing.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Views\Training.xaml.cs">
-      <DependentUpon>Training.xaml</DependentUpon>
     </Compile>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -322,14 +307,10 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Core\Classifier.cs" />
     <Compile Include="Core\Common.cs" />
     <Compile Include="Core\DocumentClassification.cs" />
     <Compile Include="Core\EtaCalculator.cs" />
-    <Compile Include="Core\StorageManager.cs" />
-    <Compile Include="Core\Surfer.cs" />
     <Compile Include="Core\TaskProgress.cs" />
-    <Compile Include="Core\TestGround.cs" />
     <Compile Include="Data\ClassifierContext.cs" />
     <Compile Include="Data\DocumentCriteria.cs" />
     <Compile Include="Data\DocumentTypes.cs" />
@@ -349,29 +330,13 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Views\Helpers.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
     <Page Include="Views\ImagePreviewWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\ImageResizer.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
     <Page Include="Views\SingleClassify.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Views\Testing.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Views\Training.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
   <ItemGroup>
@@ -1067,8 +1032,29 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
+    <PostBuildEvent>if $(PlatformName) == x86 (
+xcopy /Y "$(SolutionDir)libs\Emgu\x86\concrt140.dll" "$(TargetDir)"
+xcopy /Y "$(SolutionDir)libs\Emgu\x86\cvextern.dll" "$(TargetDir)"
+xcopy /Y "$(SolutionDir)libs\Emgu\x86\msvcp140.dll" "$(TargetDir)"
+xcopy /Y "$(SolutionDir)libs\Emgu\x86\opencv_ffmpeg330.dll" "$(TargetDir)"
+xcopy /Y "$(SolutionDir)libs\Emgu\x86\vcruntime140.dll" "$(TargetDir)"
+)
+if $(PlatformName) == x64 (
+xcopy /Y "$(SolutionDir)libs\Emgu\x64\concrt140.dll" "$(TargetDir)"
+xcopy /Y "$(SolutionDir)libs\Emgu\x64\cvextern.dll" "$(TargetDir)"
+xcopy /Y "$(SolutionDir)libs\Emgu\x64\cvextern.lib" "$(TargetDir)"
+xcopy /Y "$(SolutionDir)libs\Emgu\x64\msvcp140.dll" "$(TargetDir)"
+xcopy /Y "$(SolutionDir)libs\Emgu\x64\opencv_ffmpeg330_64.dll" "$(TargetDir)"
+xcopy /Y "$(SolutionDir)libs\Emgu\x64\vcruntime140.dll" "$(TargetDir)"
+)
+if $(PlatformName) == Any CPU (
+xcopy /Y "$(SolutionDir)libs\Emgu\x64\concrt140.dll" "$(TargetDir)"
+xcopy /Y "$(SolutionDir)libs\Emgu\x64\cvextern.dll" "$(TargetDir)"
+xcopy /Y "$(SolutionDir)libs\Emgu\x64\cvextern.lib" "$(TargetDir)"
+xcopy /Y "$(SolutionDir)libs\Emgu\x64\msvcp140.dll" "$(TargetDir)"
+xcopy /Y "$(SolutionDir)libs\Emgu\x64\opencv_ffmpeg330_64.dll" "$(TargetDir)"
+xcopy /Y "$(SolutionDir)libs\Emgu\x64\vcruntime140.dll" "$(TargetDir)"
+)</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
     <PreBuildEvent>

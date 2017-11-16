@@ -119,7 +119,9 @@ namespace Classifier.Core
             var bytes = Convert.FromBase64String(base64String);
             using (var ms = new MemoryStream(bytes))
             {
+#pragma warning disable S2930 // "IDisposables" should be disposed
                 image = Image.FromStream(ms);
+#pragma warning restore S2930 // "IDisposables" should be disposed
             }
             return (Bitmap)image;
         }
@@ -329,7 +331,7 @@ namespace Classifier.Core
             return (namingModels, criteriaImages);
         }
 
-        public static Task<Dictionary<string, string>> ConvertPdfsToImagesAsync(IEnumerable<string> pdfFiles)
+        public static Task<Dictionary<string, string>> ConvertPdfsToImagesAsync(IEnumerable<string> pdfFiles, IProgress<TaskProgress> prog = null, EtaCalculator eta = null)
         {
             return Task.Run(() =>
             {
@@ -337,7 +339,9 @@ namespace Classifier.Core
                 var files = new List<FileInfo>();
                 pdfFiles.ForEach(c => files.Add(new FileInfo(c)));
                 var pdfFilesList = files.Where(c => c.Extension == ".pdf").ToList();
-                Parallel.ForEach(pdfFilesList, (file) =>
+                var currentFile = 0;
+                var fileCount = pdfFilesList.Count;
+                foreach(var file in pdfFilesList)
                 {
                     using (var viewer = new PdfDocumentView())
                     {
@@ -352,7 +356,32 @@ namespace Classifier.Core
                             imgCount++;
                         }
                     }
-                });
+                    if (prog == null || eta == null) continue;
+                    currentFile++;
+                    var rawProgress = (Convert.ToDouble(currentFile) / Convert.ToDouble(fileCount));
+                    var progress = rawProgress * 100;
+                    var progressFloat = (float)rawProgress;
+                    eta.Update(progressFloat);
+                    if (eta.ETAIsAvailable)
+                    {
+                        var timeRemaining = eta.ETR.ToString(@"dd\.hh\:mm\:ss");
+                        prog.Report(new TaskProgress
+                        {
+                            ProgressText = file.Name,
+                            ProgressPercentage = progress,
+                            ProgressText2 = timeRemaining
+                        });
+                    }
+                    else
+                    {
+                        prog.Report(new TaskProgress
+                        {
+                            ProgressText = file.Name,
+                            ProgressPercentage = progress,
+                            ProgressText2 = "Calculating..."
+                        });
+                    }
+                }
                 return pdfImages;
             });
         }

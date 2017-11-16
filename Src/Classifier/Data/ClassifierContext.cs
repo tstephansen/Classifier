@@ -6,7 +6,7 @@ using System.IO;
 
 namespace Classifier.Data
 {
-    [DbConfigurationType(typeof(ClassifierDbConfiguration))]
+    //[DbConfigurationType(typeof(ClassifierDbConfiguration))]
     public partial class ClassifierContext : DbContext
     {
         public ClassifierContext() : base(BuildConnectionString())
@@ -15,11 +15,18 @@ namespace Classifier.Data
 
         public static string BuildConnectionString()
         {
-            var builder = new SqlConnectionStringBuilder(@"Server=(localdb)\v11.0;Integrated Security=true;AttachDbFileName=|DataDirectory|ClassifierDb.mdf;")
+            if(System.Environment.UserDomainName == "DEVOPS")
             {
-                AttachDBFilename = System.Diagnostics.Debugger.IsAttached ? Path.Combine(Directory.GetCurrentDirectory(), "ClassifierDb.mdf") : Path.Combine(ApplicationDeployment.CurrentDeployment.DataDirectory, "ClassifierDb.mdf")
-            };
-            return builder.ConnectionString;
+                return @"Server=(localdb)\v11.0;Database=ClassifierDb;Integrated Security=true;MultipleActiveResultSets=True;App=EntityFramework;";
+            }
+            else
+            {
+                var builder = new SqlConnectionStringBuilder(@"Server=(localdb)\v11.0;Integrated Security=true;AttachDbFileName=|DataDirectory|ClassifierDb.mdf;")
+                {
+                    AttachDBFilename = System.Diagnostics.Debugger.IsAttached ? Path.Combine(Directory.GetCurrentDirectory(), "ClassifierDb.mdf") : Path.Combine(ApplicationDeployment.CurrentDeployment.DataDirectory, "ClassifierDb.mdf")
+                };
+                return builder.ConnectionString;
+            }
         }
 
         public virtual DbSet<DocumentCriteria> DocumentCriteria { get; set; }

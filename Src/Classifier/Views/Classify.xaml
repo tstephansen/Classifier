@@ -23,6 +23,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
@@ -42,20 +43,6 @@
             <Button Margin="5,0,0,0"
                     Command="{Binding ReloadDocumentTypesCommand}"
                     Content="Reload Doc. Types" />
-            <Button Margin="5,0,0,0"
-                    Command="{Binding ClassifyCommand}"
-                    Content="Classify"
-                    IsEnabled="{Binding ClassifyEnabled}" />
-            <Button Margin="5,0,0,0"
-                    Command="{Binding CancelClassifyCommand}"
-                    Content="Cancel"
-                    IsEnabled="{Binding CancelEnabled}" />
-            <Label Margin="5,0,0,0"
-                   VerticalAlignment="Center"
-                   Content="View Results" />
-            <ToggleButton VerticalAlignment="Center"
-                          IsChecked="{Binding ViewResults}"
-                          Style="{DynamicResource MaterialDesignSwitchToggleButton}" />
             <Label Margin="10,0,0,0"
                    VerticalAlignment="Center"
                    Content="Uniqueness Threshold:" />
@@ -68,16 +55,31 @@
             <TextBox MinWidth="50"
                      VerticalAlignment="Center"
                      Text="{Binding KNearest}" />
-            <Button Command="{Binding ResultsFolderCommand}" Content="Results Folder" />
         </WrapPanel>
         <WrapPanel Grid.Row="1"
                    Grid.ColumnSpan="2"
                    Orientation="Horizontal">
             <Label Content="Naming Spreadsheet:" />
-            <TextBox MinWidth="350" Text="{Binding NamingSpreadsheetPath}" />
+            <TextBox MinWidth="250" Text="{Binding NamingSpreadsheetPath}" />
             <Button Command="{Binding BrowseForSpreadsheetCommand}" Content="Browse For Spreadsheet" />
+            <Label Content="Include Serial In Filename" />
+            <ToggleButton IsChecked="{Binding AppendSerialToFile}"
+                          IsEnabled="{Binding AppendSerialToFileEnabled}"
+                          Style="{DynamicResource MaterialDesignSwitchToggleButton}" />
         </WrapPanel>
         <WrapPanel Grid.Row="2" Orientation="Horizontal">
+            <Button Margin="5,0,0,0"
+                    Command="{Binding ClassifyCommand}"
+                    Content="Classify"
+                    IsEnabled="{Binding ClassifyEnabled}" />
+            <Button Margin="5,0,0,0"
+                    Command="{Binding CancelClassifyCommand}"
+                    Content="Cancel"
+                    IsEnabled="{Binding CancelEnabled}" />
+            <Button Command="{Binding ResultsFolderCommand}" Content="Results Folder" />
+            <Button Command="{Binding RemoveResultsCommand}" Content="Remove Results" />
+        </WrapPanel>
+        <WrapPanel Grid.Row="3" Orientation="Horizontal">
             <Label VerticalAlignment="Center" Content="Feature Detection Method:" />
             <RadioButton VerticalAlignment="Center"
                          Content="SIFT"
@@ -88,7 +90,7 @@
                          GroupName="DetectionMethod"
                          IsChecked="{Binding SelectedDetectionMethod, Converter={StaticResource RadioButtonToIntConverter}, ConverterParameter=1, Mode=TwoWay}" />
         </WrapPanel>
-        <StackPanel Grid.Row="3"
+        <StackPanel Grid.Row="4"
                     Grid.ColumnSpan="2"
                     Margin="0,10,0,0"
                     Orientation="Horizontal">
@@ -107,31 +109,23 @@
             <Label Margin="10,0,0,0" Content="Time Remaining" />
             <Label Margin="5,0,0,0" Content="{Binding ProgressText2}" />
         </StackPanel>
-        <ListBox Grid.Row="4"
-                 ItemsSource="{Binding PdfFiles}"
+        <ListBox Grid.Row="5"
+                 Grid.Column="0"
+                 DisplayMemberPath="Display"
+                 ItemsSource="{Binding FilesViewSource}"
                  SelectedItem="{Binding SelectedFile}" />
-        <Grid Grid.Row="4" Grid.Column="1">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
-            <ListBox Grid.Row="0" ItemsSource="{Binding DocumentSelectionList}">
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <StackPanel Orientation="Horizontal">
-                            <CheckBox IsChecked="{Binding Selected}" />
-                            <Label Margin="10,0,0,0" Content="{Binding DocumentType}" />
-                        </StackPanel>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-            <Label Grid.Row="1" Content="Score Log" />
-            <TextBox Grid.Row="2"
-                     HorizontalAlignment="Stretch"
-                     VerticalAlignment="Stretch"
-                     Text="{Binding ScoreLog}" />
-        </Grid>
+        <ListBox Grid.Row="5"
+                 Grid.Column="1"
+                 ItemsSource="{Binding SelectionViewSource}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <CheckBox IsChecked="{Binding Selected}" />
+                        <Label Margin="10,0,0,0" Content="{Binding Display}" />
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
         <md:DialogHost Grid.RowSpan="5"
                        Grid.ColumnSpan="2"
                        HorizontalAlignment="Center"
@@ -139,9 +133,7 @@
                        CloseOnClickAway="True"
                        IsOpen="{Binding DialogVisible}">
             <md:DialogHost.DialogContent>
-                <Grid HorizontalAlignment="Stretch"
-                      VerticalAlignment="Stretch"
-                      Background="#7A212121">
+                <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                     <Grid MinWidth="200"
                           MinHeight="200"
                           HorizontalAlignment="Center"

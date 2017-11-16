@@ -1,9 +1,11 @@
-﻿using Classifier.Data;
+﻿using Classifier.Core;
+using Classifier.Data;
 using LandmarkDevs.Core.Infrastructure;
 using LandmarkDevs.Core.Shared;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -61,10 +63,13 @@ namespace Classifier.ViewModels
                     context.DocumentTypes.Add(new DocumentTypes
                     {
                         Id = GuidGenerator.GenerateTimeBasedGuid(),
-                        DocumentType = DocumentTypeText
+                        DocumentType = DocumentTypeText,
+                        AverageScore = RequiredScore
                     });
                     context.SaveChanges();
                 }
+                var newTypePath = Path.Combine(Common.ResultsStorage, DocumentTypeText);
+                if (!Directory.Exists(newTypePath)) Directory.CreateDirectory(newTypePath);
                 LoadDocumentTypes();
             }
         }

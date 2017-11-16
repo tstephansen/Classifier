@@ -1,12 +1,11 @@
+using Classifier.Data;
+using System;
+using System.Collections.Generic;
+using System.Data.Entity.Migrations;
+#pragma warning disable S125
+
 namespace Classifier.Migrations
 {
-    using Classifier.Data;
-    using System;
-    using System.Collections.Generic;
-    using System.Data.Entity;
-    using System.Data.Entity.Migrations;
-    using System.Linq;
-
     internal sealed class Configuration : DbMigrationsConfiguration<Classifier.Data.ClassifierContext>
     {
         public Configuration()
@@ -20,8 +19,6 @@ namespace Classifier.Migrations
             {
                 context.DocumentTypes.AddOrUpdate(c => c.Id, type);
             }
-            var mld = _criteria.First(c => c.Id == new Guid("C144C6E2-C9AE-11E7-9BED-247A0B33676B"));
-            context.DocumentCriteria.AddOrUpdate(c => c.Id, mld);
             //foreach(var criteria in _criteria)
             //{
             //    context.DocumentCriteria.AddOrUpdate(c => c.Id, criteria);

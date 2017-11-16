@@ -3,15 +3,12 @@ using Classifier.Data;
 using Classifier.Models;
 using Classifier.Views;
 using Emgu.CV;
-using Emgu.CV.CvEnum;
-using Emgu.CV.UI;
 using LandmarkDevs.Core.Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Data;
 
@@ -23,8 +20,6 @@ namespace Classifier.ViewModels
         {
             KNearest = 2;
             UniquenessThreshold = 0.6;
-            DocClass = new DocumentClassification();
-            _criteriaImages = new List<CriteriaImageModel>();
             BrowseCommand = new RelayCommand(BrowseForFiles);
             ReloadDocumentTypesCommand = new RelayCommand(LoadDocumentTypes);
             SelectAllCommand = new RelayCommand(SelectAll);
@@ -75,7 +70,7 @@ namespace Classifier.ViewModels
             PdfPath = filesDialog.FileName;
         }
 
-        public Task CreateCriteriaFilesAsync(List<DocumentCriteria> documentCriteria, List<DocumentTypes> types)
+        public static Task CreateCriteriaFilesAsync(List<DocumentCriteria> documentCriteria, List<DocumentTypes> types)
         {
             return Task.Run(() =>
             {
@@ -115,8 +110,6 @@ namespace Classifier.ViewModels
         public async Task ProcessDocumentsAsync()
         {
             _criteriaFilePaths = new List<string>();
-            _criteriaImages = new List<CriteriaImageModel>();
-            _matchedFiles = new List<CriteriaMatchModel>();
             ClassifyEnabled = false;
             var pdfFiles = new List<string> { PdfPath };
             await Common.ConvertPdfsToImagesAsync(pdfFiles);
@@ -135,8 +128,6 @@ namespace Classifier.ViewModels
                 documentCriteria = context.DocumentCriteria.ToList();
             }
             await Common.CreateCriteriaFilesAsync(documentCriteria, types);
-            var criteriaImages = SetNamingAndCriteria();
-            _criteriaImages.AddRange(criteriaImages);
             var tempDirectoryInfo = new DirectoryInfo(Common.TempStorage);
             var files = tempDirectoryInfo.GetFiles();
             await ProcessSelectedDocumentsAsync(files.ToList());
@@ -167,8 +158,7 @@ namespace Classifier.ViewModels
 
         public long Classify(Mat modelImage, Mat observedImage)
         {
-            var score = 0L;
-            var result = DocClass.ClassifyAndShowResult(modelImage, observedImage, UniquenessThreshold, KNearest, out score);
+            var result = DocumentClassification.ClassifyAndShowResult(modelImage, observedImage, UniquenessThreshold, KNearest, out long score);
             System.Windows.Application.Current.Dispatcher.Invoke(() =>
             {
                 var viewer = new ImagePreviewWindow(result, score);
@@ -179,14 +169,13 @@ namespace Classifier.ViewModels
         #endregion
 
         #region Fields
-        private List<CriteriaImageModel> _criteriaImages;
         private List<string> _criteriaFilePaths;
         public string PdfPath
         {
             get => _pdfPath;
             set
             {
-                ClassifyEnabled = value != null ? true : false;
+                ClassifyEnabled = value != null;
                 Set(ref _pdfPath, value);
             }
         }
@@ -198,8 +187,6 @@ namespace Classifier.ViewModels
             set => Set(ref _classifyEnabled, value);
         }
         private bool _classifyEnabled;
-
-        private List<CriteriaMatchModel> _matchedFiles;
 
         public ObservableCollection<DocumentSelectionModel> DocumentSelectionList
         {
@@ -221,8 +208,6 @@ namespace Classifier.ViewModels
             set => Set(ref _kNearest, value);
         }
         private int _kNearest;
-
-        public DocumentClassification DocClass { get; set; }
 
         public Dictionary<string, string> PdfImages { get; set; }
 
