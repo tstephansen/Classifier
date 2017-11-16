@@ -341,47 +341,65 @@ namespace Classifier.Core
                 var pdfFilesList = files.Where(c => c.Extension == ".pdf").ToList();
                 var currentFile = 0;
                 var fileCount = pdfFilesList.Count;
-                foreach(var file in pdfFilesList)
+                var lockTarget = new object();
+                Parallel.ForEach(pdfFilesList, (file) =>
                 {
-                    using (var viewer = new PdfDocumentView())
+                    try
                     {
-                        viewer.Load(file.FullName);
-                        var images = viewer.LoadedDocument.ExportAsImage(0, viewer.PageCount - 1, new SizeF(1428, 1848), true);
-                        var imgCount = 1;
-                        foreach (var image in images)
+                        using (var viewer = new PdfDocumentView())
                         {
-                            var imgPath = Path.Combine(TempStorage, $"{file.Name.Substring(0, file.Name.Length - 4)}.{imgCount}.png");
-                            pdfImages.Add(imgPath, file.FullName);
-                            image.Save(imgPath);
-                            imgCount++;
+                            viewer.Load(file.FullName);
+                            var images = viewer.LoadedDocument.ExportAsImage(0, viewer.PageCount - 1, new SizeF(1428, 1848), true);
+                            var imgCount = 1;
+                            foreach (var image in images)
+                            {
+                                var imgPath = Path.Combine(TempStorage, $"{file.Name.Substring(0, file.Name.Length - 4)}.{imgCount}.png");
+                                pdfImages.Add(imgPath, file.FullName);
+                                image.Save(imgPath);
+                                imgCount++;
+                            }
                         }
                     }
-                    if (prog == null || eta == null) continue;
-                    currentFile++;
-                    var rawProgress = (Convert.ToDouble(currentFile) / Convert.ToDouble(fileCount));
-                    var progress = rawProgress * 100;
-                    var progressFloat = (float)rawProgress;
-                    eta.Update(progressFloat);
-                    if (eta.ETAIsAvailable)
+                    catch (Exception ex)
                     {
-                        var timeRemaining = eta.ETR.ToString(@"dd\.hh\:mm\:ss");
-                        prog.Report(new TaskProgress
-                        {
-                            ProgressText = file.Name,
-                            ProgressPercentage = progress,
-                            ProgressText2 = timeRemaining
-                        });
+                        Console.WriteLine(ex.Message.Trim());
+                        System.Diagnostics.Debug.WriteLine(ex.Message.Trim());
                     }
-                    else
+                    finally
                     {
-                        prog.Report(new TaskProgress
+                        if (prog != null || eta != null)
                         {
-                            ProgressText = file.Name,
-                            ProgressPercentage = progress,
-                            ProgressText2 = "Calculating..."
-                        });
+                            lock (prog)
+                            {
+                                currentFile++;
+                                var rawProgress = (Convert.ToDouble(currentFile) / Convert.ToDouble(fileCount));
+                                var progress = rawProgress * 100;
+                                var progressFloat = (float)rawProgress;
+                                eta.Update(progressFloat);
+                                if (eta.ETAIsAvailable)
+                                {
+                                    var timeRemaining = eta.ETR.ToString(@"dd\.hh\:mm\:ss");
+                                    prog.Report(new TaskProgress
+                                    {
+                                        ProgressText = file.Name,
+                                        ProgressPercentage = progress,
+                                        ProgressText2 = timeRemaining
+                                    });
+                                }
+                                else
+                                {
+                                    prog.Report(new TaskProgress
+                                    {
+                                        ProgressText = file.Name,
+                                        ProgressPercentage = progress,
+                                        ProgressText2 = "Calculating..."
+                                    });
+                                }
+
+                            }
+                        }
                     }
-                }
+                });
                 return pdfImages;
             });
         }
