@@ -10,6 +10,8 @@ using System.Deployment.Application;
 using System.IO;
 using System.Linq;
 using System.Windows;
+using System.Windows.Threading;
+
 #pragma warning disable S1075
 
 namespace Classifier
@@ -22,7 +24,7 @@ namespace Classifier
         protected override void OnStartup(StartupEventArgs e)
         {
             var currentDir = Directory.GetCurrentDirectory();
-            AppDomain.CurrentDomain.SetData("DataDirectory", Directory.GetCurrentDirectory());
+            AppDomain.CurrentDomain.SetData("DataDirectory", Common.AppStorage);
             var remoteLogViewerEnabled = false;
             var remoteLogIpAddress = "";
             for (var i = 0; i != e.Args.Length; ++i)
@@ -50,7 +52,7 @@ namespace Classifier
                 Copy64BitBinaries(currentDir);
             }
             var importData = false;
-            using(var context = new ClassifierContext())
+            using (var context = new ClassifierContext())
             {
                 var types = context.DocumentTypes.ToList();
                 if (types.Count == 0) importData = true;
@@ -66,7 +68,7 @@ namespace Classifier
             if (!Directory.Exists(Common.TempStorage)) Directory.CreateDirectory(Common.TempStorage);
             var tempDirectory = new DirectoryInfo(Common.TempStorage);
             var tempFiles = tempDirectory.GetFiles();
-            foreach(var file in tempFiles)
+            foreach (var file in tempFiles)
             {
                 File.Delete(file.FullName);
             }
@@ -80,7 +82,7 @@ namespace Classifier
             var x64Path = Path.Combine(currentDir, "x64");
             var x64Dir = new DirectoryInfo(x64Path);
             var x64Files = x64Dir.GetFiles();
-            foreach(var file in x64Files)
+            foreach (var file in x64Files)
             {
                 var filePath = Path.Combine(currentDir, file.Name);
                 if (!File.Exists(filePath))
@@ -93,18 +95,21 @@ namespace Classifier
             Common.Logger.Log(LogLevel.Info, "Database has no tables. Trying to import data.");
             try
             {
-                var script = string.Empty;
-                if(Environment.UserDomainName == "DEVOPS")
+                string script;
+                switch (Environment.UserDomainName)
                 {
-                    script = File.ReadAllText(@"\\NAS\Software\Published Apps\Classifier\Classifier.sql");
-                }
-                else
-                {
-                    script = File.ReadAllText(@"\\SVR300-003\yca\Project Software\Classifier.sql");
+                    case "DEVOPS":
+                        script = File.ReadAllText(@"\\NAS\Software\Published Apps\Classifier\Classifier.sql");
+                        break;
+                    case "USYKGW":
+                        script = File.ReadAllText(@"\\SVR300-003\yca\Project Software\Classifier.sql");
+                        break;
+                    default:
+                        return;
                 }
                 var builder = new SqlConnectionStringBuilder(@"Server=(localdb)\v11.0;Integrated Security=true;AttachDbFileName=|DataDirectory|ClassifierDb.mdf;")
                 {
-                    AttachDBFilename = System.Diagnostics.Debugger.IsAttached ? Path.Combine(Directory.GetCurrentDirectory(), "ClassifierDb.mdf") : Path.Combine(ApplicationDeployment.CurrentDeployment.DataDirectory, "ClassifierDb.mdf")
+                    AttachDBFilename = Path.Combine(Common.AppStorage, "ClassifierDb.mdf")
                 };
                 var connString = builder.ConnectionString;
                 using (var conn = new SqlConnection(connString))
@@ -117,6 +122,36 @@ namespace Classifier
             {
                 Common.Logger.Log(LogLevel.Error, ex.Message.Trim());
             }
+        }
+
+        private void App_OnStartup(object sender, StartupEventArgs e)
+        {
+            Application.Current.DispatcherUnhandledException +=
+                new DispatcherUnhandledExceptionEventHandler(AppDispatcherUnhandledException);
+        }
+
+        private void AppDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+        {
+#if DEBUG // In debug mode do not custom-handle the exception, let Visual Studio handle it
+            e.Handled = false;
+#else
+            ShowUnhandledException(e);
+#endif
+        }
+
+        private void ShowUnhandledException(DispatcherUnhandledExceptionEventArgs e)
+        {
+            e.Handled = true;
+            var errorMessage =
+                $"An application error occurred.\nPlease check whether your data is correct and repeat the action. If this error occurs again there seems to be a more serious malfunction in the application, and you better close it.\n\nError: {e.Exception.Message + (e.Exception.InnerException != null ? "\n" + e.Exception.InnerException.Message : null)}\n\nDo you want to continue?\n(if you click Yes you will continue with your work, if you click No the application will close)";
+
+            if (MessageBox.Show(errorMessage, "Application Error", MessageBoxButton.YesNoCancel,
+                    MessageBoxImage.Error) != MessageBoxResult.No) return;
+            if (MessageBox.Show(
+                    "WARNING: The application will close. Any changes will not be saved!\nDo you really want to close it?",
+                    "Close the application!", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning) !=
+                MessageBoxResult.Yes) return;
+            Application.Current.Shutdown();
         }
     }
 }

@@ -1,13 +1,12 @@
-using Classifier.Migrations;
 using System.Data.Entity;
 using System.Data.SqlClient;
-using System.Deployment.Application;
 using System.IO;
+using Classifier.Core;
 
 namespace Classifier.Data
 {
     [DbConfigurationType(typeof(ClassifierDbConfiguration))]
-    public partial class ClassifierContext : DbContext
+    public class ClassifierContext : DbContext
     {
         public ClassifierContext() : base(BuildConnectionString())
         {
@@ -19,14 +18,11 @@ namespace Classifier.Data
             {
                 return @"Server=(localdb)\v11.0;Database=ClassifierDb;Integrated Security=true;MultipleActiveResultSets=True;App=EntityFramework;";
             }
-            else
+            var builder = new SqlConnectionStringBuilder(@"Server=(localdb)\v11.0;Integrated Security=true;AttachDbFileName=|DataDirectory|ClassifierDb.mdf;")
             {
-                var builder = new SqlConnectionStringBuilder(@"Server=(localdb)\v11.0;Integrated Security=true;AttachDbFileName=|DataDirectory|ClassifierDb.mdf;")
-                {
-                    AttachDBFilename = System.Diagnostics.Debugger.IsAttached ? Path.Combine(Directory.GetCurrentDirectory(), "ClassifierDb.mdf") : Path.Combine(ApplicationDeployment.CurrentDeployment.DataDirectory, "ClassifierDb.mdf")
-                };
-                return builder.ConnectionString;
-            }
+                AttachDBFilename = Path.Combine(Common.AppStorage, "ClassifierDb.mdf")
+            };
+            return builder.ConnectionString;
         }
 
         public virtual DbSet<DocumentCriteria> DocumentCriteria { get; set; }

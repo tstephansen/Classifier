@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?define ProductId = "28DB099F-4B2F-4B43-94E8-C3BF471DBFA3"?>
+<?define ProductVersion = "1.0.0.1"?>
+<?define ProductUpgradeCode = "6756D54F-9AB3-4400-A9ED-DBCD15FC3926"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension" xmlns:util="http://schemas.microsoft.com/wix/UtilExtension" xmlns:bal="http://schemas.microsoft.com/wix/BalExtension">
+    <?define Classifier_TargetDir=$(var.Classifier.TargetDir)?>
+
+    <Product Id="*" Name="ClassifierSetup" Language="1033" Version="$(var.ProductVersion)" Manufacturer="Microsoft" UpgradeCode="$(var.ProductUpgradeCode)">
+        <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" Platform="x64" />
+        <MediaTemplate EmbedCab="yes" />
+
+        <Directory Id="TARGETDIR" Name="SourceDir">
+            <Directory Id="ProgramFilesFolder">
+                <Directory Id="ProgramGroup" Name="LandmarkDevs">
+                    <Directory Id="INSTALLDIR" Name="Classifier">
+                        <Directory Id="SQLSERVERTYPES" Name="SqlServerTypes">
+                            <Directory Id="SQLSERVERTYPESX64" Name="x64">
+                            </Directory>
+                        </Directory>
+                        <Directory Id="X64CVDIR" Name="x64">
+                        </Directory>
+                    </Directory>
+                </Directory>
+            </Directory>
+            <Directory Id="ProgramMenuFolder">
+                <Directory Id="ApplicationProgramsFolder" Name="LandmarkDevs" />
+            </Directory>
+            <Directory Id="DesktopFolder" Name="Desktop" />
+        </Directory>
+
+        <DirectoryRef Id="ApplicationProgramsFolder">
+            <Component Id="ApplicationShortcut" Guid="32D1D413-67E5-40C6-83F8-2EBF1023F9FE">
+                <Shortcut Id="ApplicationStartMenuShortcut" Name="Classifier" Description="Classifier" Target="[#Classifier.exe]" WorkingDirectory="INSTALLDIR" />
+                <RemoveFolder Id="RemoveApplicationProgramsFolder" Directory="ApplicationProgramsFolder" On="uninstall" />
+                <RegistryValue Root="HKCU" Key="Software\LandmarkDevs\Classifier" Name="Installed" Type="integer" Value="1" KeyPath="yes" />
+            </Component>
+        </DirectoryRef>
+        <DirectoryRef Id="DesktopFolder">
+            <Component Id="ApplicationShortcutDesktop" Guid="E794355D-6C7D-4810-BD12-4594B8B48526">
+                <Shortcut Id="ApplicationDesktopShortcut" Name="Classifier" Description="Classifier" Target="[#Classifier.exe]" WorkingDirectory="INSTALLDIR" />
+                <RemoveFolder Id="RemoveDesktopFolder" Directory="DesktopFolder" On="uninstall" />
+                <RegistryValue Root="HKCU" Key="Software\LandmarkDevs\Classifier" Name="Installed" Type="integer" Value="1" KeyPath="yes" />
+            </Component>
+        </DirectoryRef>
+
+        <Upgrade Id="$(var.ProductUpgradeCode)">
+            <UpgradeVersion OnlyDetect="no" IncludeMinimum="yes" IncludeMaximum="yes" Minimum="0.0.1.0" Maximum="$(var.ProductVersion)" Property="PREVIOUSVERSIONSINSTALLED" />
+            <UpgradeVersion OnlyDetect="yes" IncludeMinimum="no" Minimum="$(var.ProductVersion)" Property="NEWERVERSIONDETECTED" />
+        </Upgrade>
+        <CustomActionRef Id="WixExitEarlyWithSuccess" />
+        <WixVariable Id="WixUILicenseRtf" Value="EULA.rtf" />
+        <Icon Id="icon.ico" SourceFile="$(var.ProjectDir)Icon.ico" />
+        <Property Id="ARPPRODUCTICON" Value="icon.ico" />
+        <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
+        <UIRef Id="WixUI_InstallDir" />
+
+        <PropertyRef Id="WIXNETFX4RELEASEINSTALLED" />
+        <PropertyRef Id="WIX_IS_NETFRAMEWORK_462_OR_LATER_INSTALLED" />
+
+        <Condition Message="This application requires .NET Framework 4.6.2. Please install the .NET Framework then run this installer again.">
+            <![CDATA[Installed OR WIX_IS_NETFRAMEWORK_462_OR_LATER_INSTALLED]]>
+        </Condition>
+
+        <InstallExecuteSequence>
+            <RemoveExistingProducts After="InstallValidate" />
+        </InstallExecuteSequence>
+
+        <Feature Id="ProductFeature" Title="Classifier" Level="1">
+            <ComponentRef Id="ApplicationShortcut" />
+            <ComponentRef Id="ApplicationShortcutDesktop" />
+            <ComponentGroupRef Id="INSTALLDIR_files" />
+            <ComponentGroupRef Id="X64CV_files" />
+            <ComponentGroupRef Id="SQLSERVERTYPESX64_files" />
+        </Feature>
+    </Product>
+
+    <Fragment>
+        <ComponentGroup Id="INSTALLDIR_files" Directory="INSTALLDIR">
+            <Component Id="Classifier.exe" Guid="21404b06-f18f-4cd2-b1b0-0c5dd9f5f02a">
+                <File Id="Classifier.exe" Name="Classifier.exe" Source="$(var.Classifier_TargetDir)Classifier.exe" />
+            </Component>
+            <Component Id="Classifier.exe.config" Guid="4e14e43e-6a7b-4cf5-851e-2dbef89340f5">
+                <File Id="Classifier.exe.config" Name="Classifier.exe.config" Source="$(var.Classifier_TargetDir)Classifier.exe.config" />
+            </Component>
+            <Component Id="ClosedXML.dll" Guid="7a68585f-f07d-4939-9995-8ed69666cf26">
+                <File Id="ClosedXML.dll" Name="ClosedXML.dll" Source="$(var.Classifier_TargetDir)ClosedXML.dll" />
+            </Component>
+            <Component Id="DocumentFormat.OpenXml.dll" Guid="32c813ad-444f-4809-a98c-5ba816387768">
+                <File Id="DocumentFormat.OpenXml.dll" Name="DocumentFormat.OpenXml.dll" Source="$(var.Classifier_TargetDir)DocumentFormat.OpenXml.dll" />
+            </Component>
+            <Component Id="Dragablz.dll" Guid="f2f28483-46c0-4074-97ce-d32405171500">
+                <File Id="Dragablz.dll" Name="Dragablz.dll" Source="$(var.Classifier_TargetDir)Dragablz.dll" />
+            </Component>
+            <Component Id="Emgu.CV.UI.dll" Guid="c3deab1e-71f7-4a1c-b8ec-5bfdb2ccc40d">
+                <File Id="Emgu.CV.UI.dll" Name="Emgu.CV.UI.dll" Source="$(var.Classifier_TargetDir)Emgu.CV.UI.dll" />
+            </Component>
+            <Component Id="Emgu.CV.UI.GL.dll" Guid="a2917174-f483-4219-97f1-17a266116ee7">
+                <File Id="Emgu.CV.UI.GL.dll" Name="Emgu.CV.UI.GL.dll" Source="$(var.Classifier_TargetDir)Emgu.CV.UI.GL.dll" />
+            </Component>
+            <Component Id="Emgu.CV.World.dll" Guid="c359882e-fc53-4fd6-bc50-e071bec5bef3">
+                <File Id="Emgu.CV.World.dll" Name="Emgu.CV.World.dll" Source="$(var.Classifier_TargetDir)Emgu.CV.World.dll" />
+            </Component>
+            <Component Id="EntityFramework.dll" Guid="db728219-8d1c-4ca3-88dc-219dbbbeddba">
+                <File Id="EntityFramework.dll" Name="EntityFramework.dll" Source="$(var.Classifier_TargetDir)EntityFramework.dll" />
+            </Component>
+            <Component Id="EntityFramework.SqlServer.dll" Guid="35deaedf-f4ba-4931-84b4-86b8ef7e01d0">
+                <File Id="EntityFramework.SqlServer.dll" Name="EntityFramework.SqlServer.dll" Source="$(var.Classifier_TargetDir)EntityFramework.SqlServer.dll" />
+            </Component>
+            <Component Id="FastMember.Signed.dll" Guid="1f8e8e58-ad03-44ca-b342-3c1bdd6e4988">
+                <File Id="FastMember.Signed.dll" Name="FastMember.Signed.dll" Source="$(var.Classifier_TargetDir)FastMember.Signed.dll" />
+            </Component>
+            <Component Id="LandmarkDevs.Core.Infrastructure.dll" Guid="4e70d889-42b4-4071-9d1b-faf70af94773">
+                <File Id="LandmarkDevs.Core.Infrastructure.dll" Name="LandmarkDevs.Core.Infrastructure.dll" Source="$(var.Classifier_TargetDir)LandmarkDevs.Core.Infrastructure.dll" />
+            </Component>
+            <Component Id="LandmarkDevs.Core.Shared.dll" Guid="ccf1fac2-54e7-4f0e-9b06-b0facd898697">
+                <File Id="LandmarkDevs.Core.Shared.dll" Name="LandmarkDevs.Core.Shared.dll" Source="$(var.Classifier_TargetDir)LandmarkDevs.Core.Shared.dll" />
+            </Component>
+            <Component Id="LandmarkDevs.UI.Material.dll" Guid="e608e263-e5a4-45d5-9924-6421142bd7a7">
+                <File Id="LandmarkDevs.UI.Material.dll" Name="LandmarkDevs.UI.Material.dll" Source="$(var.Classifier_TargetDir)LandmarkDevs.UI.Material.dll" />
+            </Component>
+            <Component Id="MaterialDesignColors.dll" Guid="286c36e8-badf-49fb-a080-c182a1d44878">
+                <File Id="MaterialDesignColors.dll" Name="MaterialDesignColors.dll" Source="$(var.Classifier_TargetDir)MaterialDesignColors.dll" />
+            </Component>
+            <Component Id="MaterialDesignThemes.Wpf.dll" Guid="a9b4b3f5-1cf9-4dfc-a24a-16ee3d58360f">
+                <File Id="MaterialDesignThemes.Wpf.dll" Name="MaterialDesignThemes.Wpf.dll" Source="$(var.Classifier_TargetDir)MaterialDesignThemes.Wpf.dll" />
+            </Component>
+            <Component Id="Microsoft.Practices.ServiceLocation.dll" Guid="92bd03ac-7165-44cc-ad63-4fe1df9af0a2">
+                <File Id="Microsoft.Practices.ServiceLocation.dll" Name="Microsoft.Practices.ServiceLocation.dll" Source="$(var.Classifier_TargetDir)Microsoft.Practices.ServiceLocation.dll" />
+            </Component>
+            <Component Id="Microsoft.WindowsAPICodePack.dll" Guid="3fb32894-a628-4fe1-8c7c-f8115938908e">
+                <File Id="Microsoft.WindowsAPICodePack.dll" Name="Microsoft.WindowsAPICodePack.dll" Source="$(var.Classifier_TargetDir)Microsoft.WindowsAPICodePack.dll" />
+            </Component>
+            <Component Id="Microsoft.WindowsAPICodePack.Shell.dll" Guid="5b0a9635-859d-4eff-bd7d-876920670baf">
+                <File Id="Microsoft.WindowsAPICodePack.Shell.dll" Name="Microsoft.WindowsAPICodePack.Shell.dll" Source="$(var.Classifier_TargetDir)Microsoft.WindowsAPICodePack.Shell.dll" />
+            </Component>
+            <Component Id="MoreLinq.dll" Guid="cd1b4d0a-8549-4968-9662-fe2439f56b9e">
+                <File Id="MoreLinq.dll" Name="MoreLinq.dll" Source="$(var.Classifier_TargetDir)MoreLinq.dll" />
+            </Component>
+            <Component Id="Newtonsoft.Json.dll" Guid="66b85471-3a3c-4f86-8f7c-e555ee0cdc4d">
+                <File Id="Newtonsoft.Json.dll" Name="Newtonsoft.Json.dll" Source="$(var.Classifier_TargetDir)Newtonsoft.Json.dll" />
+            </Component>
+            <Component Id="NLog.dll" Guid="c7dd7429-88cc-4928-b44e-855dfbf1d081">
+                <File Id="NLog.dll" Name="NLog.dll" Source="$(var.Classifier_TargetDir)NLog.dll" />
+            </Component>
+            <Component Id="Prism.dll" Guid="1b2551c4-a2b5-4c3e-ada2-916bec5749d4">
+                <File Id="Prism.dll" Name="Prism.dll" Source="$(var.Classifier_TargetDir)Prism.dll" />
+            </Component>
+            <Component Id="Prism.Wpf.dll" Guid="916087c6-3790-4b3e-9c5d-6cb0a294ab49">
+                <File Id="Prism.Wpf.dll" Name="Prism.Wpf.dll" Source="$(var.Classifier_TargetDir)Prism.Wpf.dll" />
+            </Component>
+            <Component Id="Syncfusion.Compression.Base.dll" Guid="700e2712-7911-4de2-8705-fc8d3d6df76c">
+                <File Id="Syncfusion.Compression.Base.dll" Name="Syncfusion.Compression.Base.dll" Source="$(var.Classifier_TargetDir)Syncfusion.Compression.Base.dll" />
+            </Component>
+            <Component Id="Syncfusion.Core.dll" Guid="3900f3b7-2b62-4356-a0f4-99310cdc77eb">
+                <File Id="Syncfusion.Core.dll" Name="Syncfusion.Core.dll" Source="$(var.Classifier_TargetDir)Syncfusion.Core.dll" />
+            </Component>
+            <Component Id="Syncfusion.Data.WPF.dll" Guid="dd5c3a2c-3f31-4863-b6d6-345cf43aeefa">
+                <File Id="Syncfusion.Data.WPF.dll" Name="Syncfusion.Data.WPF.dll" Source="$(var.Classifier_TargetDir)Syncfusion.Data.WPF.dll" />
+            </Component>
+            <Component Id="Syncfusion.Linq.Base.dll" Guid="05566ac5-b30c-49f9-ada6-c5e9e667c582">
+                <File Id="Syncfusion.Linq.Base.dll" Name="Syncfusion.Linq.Base.dll" Source="$(var.Classifier_TargetDir)Syncfusion.Linq.Base.dll" />
+            </Component>
+            <Component Id="Syncfusion.Pdf.Base.dll" Guid="35fd05d1-93ec-4132-8bf6-46c9ecf35b08">
+                <File Id="Syncfusion.Pdf.Base.dll" Name="Syncfusion.Pdf.Base.dll" Source="$(var.Classifier_TargetDir)Syncfusion.Pdf.Base.dll" />
+            </Component>
+            <Component Id="Syncfusion.Pdf.Windows.dll" Guid="d3436de0-e5de-428a-945d-115ee8e9232c">
+                <File Id="Syncfusion.Pdf.Windows.dll" Name="Syncfusion.Pdf.Windows.dll" Source="$(var.Classifier_TargetDir)Syncfusion.Pdf.Windows.dll" />
+            </Component>
+            <Component Id="Syncfusion.Pdf.WPF.dll" Guid="f5a30c30-55c4-4d6b-9551-1c1d3e8053a7">
+                <File Id="Syncfusion.Pdf.WPF.dll" Name="Syncfusion.Pdf.WPF.dll" Source="$(var.Classifier_TargetDir)Syncfusion.Pdf.WPF.dll" />
+            </Component>
+            <Component Id="Syncfusion.PdfViewer.Windows.dll" Guid="35f0ff5a-5c6e-4a5a-8f5f-0228aa01b402">
+                <File Id="Syncfusion.PdfViewer.Windows.dll" Name="Syncfusion.PdfViewer.Windows.dll" Source="$(var.Classifier_TargetDir)Syncfusion.PdfViewer.Windows.dll" />
+            </Component>
+            <Component Id="Syncfusion.PdfViewer.WPF.dll" Guid="835bc116-006d-4fd6-8328-216792262bac">
+                <File Id="Syncfusion.PdfViewer.WPF.dll" Name="Syncfusion.PdfViewer.WPF.dll" Source="$(var.Classifier_TargetDir)Syncfusion.PdfViewer.WPF.dll" />
+            </Component>
+            <Component Id="Syncfusion.SfShared.WPF.dll" Guid="1a1f6414-a11a-4548-9a02-f322d6f3d1ca">
+                <File Id="Syncfusion.SfShared.WPF.dll" Name="Syncfusion.SfShared.WPF.dll" Source="$(var.Classifier_TargetDir)Syncfusion.SfShared.WPF.dll" />
+            </Component>
+            <Component Id="Syncfusion.Shared.Base.dll" Guid="ff3c4d10-58fb-4e3a-aa54-dc8c67eddae8">
+                <File Id="Syncfusion.Shared.Base.dll" Name="Syncfusion.Shared.Base.dll" Source="$(var.Classifier_TargetDir)Syncfusion.Shared.Base.dll" />
+            </Component>
+            <Component Id="Syncfusion.Shared.Windows.dll" Guid="56aed6a1-dfa1-4929-97f5-e1343d76df25">
+                <File Id="Syncfusion.Shared.Windows.dll" Name="Syncfusion.Shared.Windows.dll" Source="$(var.Classifier_TargetDir)Syncfusion.Shared.Windows.dll" />
+            </Component>
+            <Component Id="Syncfusion.Shared.WPF.dll" Guid="beb3bf0b-6419-4791-a9d6-f935b1ac4488">
+                <File Id="Syncfusion.Shared.WPF.dll" Name="Syncfusion.Shared.WPF.dll" Source="$(var.Classifier_TargetDir)Syncfusion.Shared.WPF.dll" />
+            </Component>
+            <Component Id="System.IO.FileSystem.Primitives.dll" Guid="d5efdff0-b433-4301-8138-c302c8ac6e5b">
+                <File Id="System.IO.FileSystem.Primitives.dll" Name="System.IO.FileSystem.Primitives.dll" Source="$(var.Classifier_TargetDir)System.IO.FileSystem.Primitives.dll" />
+            </Component>
+            <Component Id="System.IO.Packaging.dll" Guid="22db8a99-064e-4b2e-89f6-c453a940089b">
+                <File Id="System.IO.Packaging.dll" Name="System.IO.Packaging.dll" Source="$(var.Classifier_TargetDir)System.IO.Packaging.dll" />
+            </Component>
+            <Component Id="System.ValueTuple.dll" Guid="5d948f09-41ad-4f37-8ff3-af4cc672c6fe">
+                <File Id="System.ValueTuple.dll" Name="System.ValueTuple.dll" Source="$(var.Classifier_TargetDir)System.ValueTuple.dll" />
+            </Component>
+            <Component Id="System.Windows.Interactivity.dll" Guid="9b947158-c12b-4201-a36b-e9a271d936b1">
+                <File Id="System.Windows.Interactivity.dll" Name="System.Windows.Interactivity.dll" Source="$(var.Classifier_TargetDir)System.Windows.Interactivity.dll" />
+            </Component>
+            <Component Id="ZedGraph.dll" Guid="5f5864e2-3957-42b3-8ae4-31c3b8ab37fa">
+                <File Id="ZedGraph.dll" Name="ZedGraph.dll" Source="$(var.Classifier_TargetDir)ZedGraph.dll" />
+            </Component>
+            <Component Id="Microsoft.SqlServer.WmiEnum.dll" Guid="5ec48a1d-ac84-4903-8c24-947849f9ebe1">
+              <File Id="Microsoft.SqlServer.WmiEnum.dll" Name="Microsoft.SqlServer.WmiEnum.dll" Source="$(var.Classifier_TargetDir)Microsoft.SqlServer.WmiEnum.dll" />
+            </Component>
+            <Component Id="Microsoft.SqlServer.AzureStorageEnum.dll" Guid="ffbba37b-9935-475a-b5fa-d3a9506fecc4">
+              <File Id="Microsoft.SqlServer.AzureStorageEnum.dll" Name="Microsoft.SqlServer.AzureStorageEnum.dll" Source="$(var.Classifier_TargetDir)Microsoft.SqlServer.AzureStorageEnum.dll" />
+            </Component>
+            <Component Id="Microsoft.SqlServer.BatchParserClient.dll" Guid="b38c4ed3-2e23-4912-9529-c449c89444b9">
+              <File Id="Microsoft.SqlServer.BatchParserClient.dll" Name="Microsoft.SqlServer.BatchParserClient.dll" Source="$(var.Classifier_TargetDir)Microsoft.SqlServer.BatchParserClient.dll" />
+            </Component>
+            <Component Id="Microsoft.SqlServer.ConnectionInfo.dll" Guid="c11f9677-ecb8-4874-8715-b21c0ca4bc53">
+              <File Id="Microsoft.SqlServer.ConnectionInfo.dll" Name="Microsoft.SqlServer.ConnectionInfo.dll" Source="$(var.Classifier_TargetDir)Microsoft.SqlServer.ConnectionInfo.dll" />
+            </Component>
+            <Component Id="Microsoft.SqlServer.ConnectionInfoExtended.dll" Guid="ff36bdba-a79b-4a10-92fd-5fa0118930d8">
+              <File Id="Microsoft.SqlServer.ConnectionInfoExtended.dll" Name="Microsoft.SqlServer.ConnectionInfoExtended.dll" Source="$(var.Classifier_TargetDir)Microsoft.SqlServer.ConnectionInfoExtended.dll" />
+            </Component>
+            <Component Id="Microsoft.SqlServer.Diagnostics.Strace.dll" Guid="aadc72c4-aa95-4116-b3a0-3ae3da15689e">
+              <File Id="Microsoft.SqlServer.Diagnostics.Strace.dll" Name="Microsoft.SqlServer.Diagnostics.Strace.dll" Source="$(var.Classifier_TargetDir)Microsoft.SqlServer.Diagnostics.Strace.dll" />
+            </Component>
+            <Component Id="Microsoft.SqlServer.Dmf.Common.dll" Guid="51fa4751-e0b0-48e5-905c-8b8b9fe0b41e">
+              <File Id="Microsoft.SqlServer.Dmf.Common.dll" Name="Microsoft.SqlServer.Dmf.Common.dll" Source="$(var.Classifier_TargetDir)Microsoft.SqlServer.Dmf.Common.dll" />
+            </Component>
+            <Component Id="Microsoft.SqlServer.Dmf.dll" Guid="b64a2030-269b-4265-bb79-4d5af8c4302b">
+              <File Id="Microsoft.SqlServer.Dmf.dll" Name="Microsoft.SqlServer.Dmf.dll" Source="$(var.Classifier_TargetDir)Microsoft.SqlServer.Dmf.dll" />
+            </Component>
+            <Component Id="Microsoft.SqlServer.Management.Collector.dll" Guid="042a6bf9-b901-4eb7-9fcb-5d7674a0b9ec">
+              <File Id="Microsoft.SqlServer.Management.Collector.dll" Name="Microsoft.SqlServer.Management.Collector.dll" Source="$(var.Classifier_TargetDir)Microsoft.SqlServer.Management.Collector.dll" />
+            </Component>
+            <Component Id="Microsoft.SqlServer.Management.CollectorEnum.dll" Guid="112a7156-afcf-4cca-bb79-805540af9092">
+              <File Id="Microsoft.SqlServer.Management.CollectorEnum.dll" Name="Microsoft.SqlServer.Management.CollectorEnum.dll" Source="$(var.Classifier_TargetDir)Microsoft.SqlServer.Management.CollectorEnum.dll" />
+            </Component>
+            <Component Id="Microsoft.SqlServer.Management.Common.dll" Guid="2ef8d869-538b-4cdb-a495-f32ec6e09984">
+              <File Id="Microsoft.SqlServer.Management.Common.dll" Name="Microsoft.SqlServer.Management.Common.dll" Source="$(var.Classifier_TargetDir)Microsoft.SqlServer.Management.Common.dll" />
+            </Component>
+            <Component Id="Microsoft.SqlServer.Management.RegisteredServers.dll" Guid="b12e5859-4c84-488e-8173-8c18bbbd6af2">
+              <File Id="Microsoft.SqlServer.Management.RegisteredServers.dll" Name="Microsoft.SqlServer.Management.RegisteredServers.dll" Source="$(var.Classifier_TargetDir)Microsoft.SqlServer.Management.RegisteredServers.dll" />
+            </Component>
+            <Component Id="Microsoft.SqlServer.Management.Sdk.Sfc.dll" Guid="4e64e45c-0e68-4602-b448-9955046a04be">
+              <File Id="Microsoft.SqlServer.Management.Sdk.Sfc.dll" Name="Microsoft.SqlServer.Management.Sdk.Sfc.dll" Source="$(var.Classifier_TargetDir)Microsoft.SqlServer.Management.Sdk.Sfc.dll" />
+            </Component>
+            <Component Id="Microsoft.SqlServer.Management.SmoMetadataProvider.dll" Guid="1d176287-6cb7-436b-8720-4d09e45edba7">
+              <File Id="Microsoft.SqlServer.Management.SmoMetadataProvider.dll" Name="Microsoft.SqlServer.Management.SmoMetadataProvider.dll" Source="$(var.Classifier_TargetDir)Microsoft.SqlServer.Management.SmoMetadataProvider.dll" />
+            </Component>
+            <Component Id="Microsoft.SqlServer.Management.Utility.dll" Guid="1bee29ba-5191-4364-8e86-c861fb0db0c3">
+              <File Id="Microsoft.SqlServer.Management.Utility.dll" Name="Microsoft.SqlServer.Management.Utility.dll" Source="$(var.Classifier_TargetDir)Microsoft.SqlServer.Management.Utility.dll" />
+            </Component>
+            <Component Id="Microsoft.SqlServer.Management.UtilityEnum.dll" Guid="d68a2d15-5035-472e-8254-ff9ba221ee8d">
+              <File Id="Microsoft.SqlServer.Management.UtilityEnum.dll" Name="Microsoft.SqlServer.Management.UtilityEnum.dll" Source="$(var.Classifier_TargetDir)Microsoft.SqlServer.Management.UtilityEnum.dll" />
+            </Component>
+            <Component Id="Microsoft.SqlServer.Management.XEvent.dll" Guid="5221ee3b-895c-4eb3-a3f2-517e38c17d2d">
+              <File Id="Microsoft.SqlServer.Management.XEvent.dll" Name="Microsoft.SqlServer.Management.XEvent.dll" Source="$(var.Classifier_TargetDir)Microsoft.SqlServer.Management.XEvent.dll" />
+            </Component>
+            <Component Id="Microsoft.SqlServer.Management.XEventDbScoped.dll" Guid="72cb9cde-334b-4978-afe0-cf876a6f275e">
+              <File Id="Microsoft.SqlServer.Management.XEventDbScoped.dll" Name="Microsoft.SqlServer.Management.XEventDbScoped.dll" Source="$(var.Classifier_TargetDir)Microsoft.SqlServer.Management.XEventDbScoped.dll" />
+            </Component>
+            <Component Id="Microsoft.SqlServer.Management.XEventDbScopedEnum.dll" Guid="d5b309ce-32f9-4dfb-a62c-78418a36d778">
+              <File Id="Microsoft.SqlServer.Management.XEventDbScopedEnum.dll" Name="Microsoft.SqlServer.Management.XEventDbScopedEnum.dll" Source="$(var.Classifier_TargetDir)Microsoft.SqlServer.Management.XEventDbScopedEnum.dll" />
+            </Component>
+            <Component Id="Microsoft.SqlServer.Management.XEventEnum.dll" Guid="14ebea3a-bcb5-4cc8-b753-f9b946bae25b">
+              <File Id="Microsoft.SqlServer.Management.XEventEnum.dll" Name="Microsoft.SqlServer.Management.XEventEnum.dll" Source="$(var.Classifier_TargetDir)Microsoft.SqlServer.Management.XEventEnum.dll" />
+            </Component>
+            <Component Id="Microsoft.SqlServer.PolicyEnum.dll" Guid="6b0f54c5-21b6-476b-9af3-9be95b50f8fc">
+              <File Id="Microsoft.SqlServer.PolicyEnum.dll" Name="Microsoft.SqlServer.PolicyEnum.dll" Source="$(var.Classifier_TargetDir)Microsoft.SqlServer.PolicyEnum.dll" />
+            </Component>
+            <Component Id="Microsoft.SqlServer.RegSvrEnum.dll" Guid="1eeb7edf-7a0f-4c0c-a14f-e928566b85f4">
+              <File Id="Microsoft.SqlServer.RegSvrEnum.dll" Name="Microsoft.SqlServer.RegSvrEnum.dll" Source="$(var.Classifier_TargetDir)Microsoft.SqlServer.RegSvrEnum.dll" />
+            </Component>
+            <Component Id="Microsoft.SqlServer.ServiceBrokerEnum.dll" Guid="6e81a57f-90e7-4426-8f35-b2b9ff5af829">
+              <File Id="Microsoft.SqlServer.ServiceBrokerEnum.dll" Name="Microsoft.SqlServer.ServiceBrokerEnum.dll" Source="$(var.Classifier_TargetDir)Microsoft.SqlServer.ServiceBrokerEnum.dll" />
+            </Component>
+            <Component Id="Microsoft.SqlServer.Smo.dll" Guid="c1788ce5-834d-46bc-bee4-2f8669ce2144">
+              <File Id="Microsoft.SqlServer.Smo.dll" Name="Microsoft.SqlServer.Smo.dll" Source="$(var.Classifier_TargetDir)Microsoft.SqlServer.Smo.dll" />
+            </Component>
+            <Component Id="Microsoft.SqlServer.SmoExtended.dll" Guid="fc0ccae0-4cae-446d-a708-dd8654447c3d">
+              <File Id="Microsoft.SqlServer.SmoExtended.dll" Name="Microsoft.SqlServer.SmoExtended.dll" Source="$(var.Classifier_TargetDir)Microsoft.SqlServer.SmoExtended.dll" />
+            </Component>
+            <Component Id="Microsoft.SqlServer.SqlClrProvider.dll" Guid="587245a5-8231-4bb9-80ec-661b327079dc">
+              <File Id="Microsoft.SqlServer.SqlClrProvider.dll" Name="Microsoft.SqlServer.SqlClrProvider.dll" Source="$(var.Classifier_TargetDir)Microsoft.SqlServer.SqlClrProvider.dll" />
+            </Component>
+            <Component Id="Microsoft.SqlServer.SqlEnum.dll" Guid="3d3a34c4-cb2e-4536-978a-99bd8d3bf106">
+              <File Id="Microsoft.SqlServer.SqlEnum.dll" Name="Microsoft.SqlServer.SqlEnum.dll" Source="$(var.Classifier_TargetDir)Microsoft.SqlServer.SqlEnum.dll" />
+            </Component>
+            <Component Id="Microsoft.SqlServer.SqlTDiagm.dll" Guid="d2a1cf7f-659e-46a5-bdad-626c236b816c">
+              <File Id="Microsoft.SqlServer.SqlTDiagm.dll" Name="Microsoft.SqlServer.SqlTDiagm.dll" Source="$(var.Classifier_TargetDir)Microsoft.SqlServer.SqlTDiagm.dll" />
+            </Component>
+            <Component Id="Microsoft.SqlServer.SqlWmiManagement.dll" Guid="9ff91a7d-bdcd-42ae-83ff-a2381a36bba4">
+              <File Id="Microsoft.SqlServer.SqlWmiManagement.dll" Name="Microsoft.SqlServer.SqlWmiManagement.dll" Source="$(var.Classifier_TargetDir)Microsoft.SqlServer.SqlWmiManagement.dll" />
+            </Component>
+            <Component Id="Microsoft.SqlServer.SString.dll" Guid="96c92982-17d0-43e3-97b6-eb980e9c3e7c">
+              <File Id="Microsoft.SqlServer.SString.dll" Name="Microsoft.SqlServer.SString.dll" Source="$(var.Classifier_TargetDir)Microsoft.SqlServer.SString.dll" />
+            </Component>
+            <Component Id="Microsoft.SqlServer.Types.dll" Guid="3b4b1337-13b1-489d-9f41-02917fcfe769">
+              <File Id="Microsoft.SqlServer.Types.dll" Name="Microsoft.SqlServer.Types.dll" Source="$(var.Classifier_TargetDir)Microsoft.SqlServer.Types.dll" />
+            </Component>
+            <Component Id="Microsoft.SqlServer.XEvent.Linq.dll" Guid="91658490-bb23-4cbd-9654-af0fc413a3fc">
+              <File Id="Microsoft.SqlServer.XEvent.Linq.dll" Name="Microsoft.SqlServer.XEvent.Linq.dll" Source="$(var.Classifier_TargetDir)Microsoft.SqlServer.XEvent.Linq.dll" />
+            </Component>
+            <Component Id="Microsoft.SqlServer.BatchParser.dll" Guid="608c6058-12f6-4df3-878a-d535455ea022">
+              <File Id="Microsoft.SqlServer.BatchParser.dll" Name="Microsoft.SqlServer.BatchParser.dll" Source="$(var.Classifier_TargetDir)Microsoft.SqlServer.BatchParser.dll" />
+            </Component>
+            <Component Id="Microsoft.SqlServer.XE.Core.dll" Guid="a554e7a3-22a2-4685-9c03-98f6968ed34e">
+              <File Id="Microsoft.SqlServer.XE.Core.dll" Name="Microsoft.SqlServer.XE.Core.dll" Source="$(var.Classifier_TargetDir)Microsoft.SqlServer.XE.Core.dll" />
+            </Component>
+            <Component Id="x64_concrt140.dll1" Guid="70B80CFC-A539-45C4-986D-2DEFA7229BE9">
+                <File Id="x64_concrt140.dll1" Name="concrt140.dll" Source="$(var.Classifier_TargetDir)concrt140.dll" />
+            </Component>
+            <Component Id="x64_cvextern.dll1" Guid="EC029737-F6F3-4B75-94EF-82ADE2B7E178">
+                <File Id="x64_cvextern.dll1" Name="cvextern.dll" Source="$(var.Classifier_TargetDir)cvextern.dll" />
+            </Component>
+            <Component Id="x64_cvextern.lib1" Guid="53657B45-EF7F-412E-BA4A-B42390A797D2">
+                <File Id="x64_cvextern.lib1" Name="cvextern.lib" Source="$(var.Classifier_TargetDir)cvextern.lib" />
+            </Component>
+            <Component Id="x64_msvcp140.dll1" Guid="B73E5A07-1F1C-411E-B797-26722734B568">
+                <File Id="x64_msvcp140.dll1" Name="msvcp140.dll" Source="$(var.Classifier_TargetDir)msvcp140.dll" />
+            </Component>
+            <Component Id="x64_opencv_ffmpeg330_64.dll1" Guid="9845E8F0-8886-40DE-BC11-2CB32331B818">
+                <File Id="x64_opencv_ffmpeg330_64.dll1" Name="opencv_ffmpeg330_64.dll" Source="$(var.Classifier_TargetDir)opencv_ffmpeg330_64.dll" />
+            </Component>
+            <Component Id="x64_vcruntime140.dll1" Guid="C5EBBA1A-F49F-4399-86B4-F2B5946CDCC4">
+                <File Id="x64_vcruntime140.dll1" Name="vcruntime140.dll" Source="$(var.Classifier_TargetDir)vcruntime140.dll" />
+            </Component>
+        </ComponentGroup>
+        
+        <ComponentGroup Id="X64CV_files" Directory="X64CVDIR">
+            <Component Id="x64_concrt140.dll" Guid="38b5c8a5-e2ab-4503-9406-61d91a73052b">
+                <File Id="x64_concrt140.dll" Name="concrt140.dll" Source="$(var.Classifier_TargetDir)x64\concrt140.dll" />
+            </Component>
+            <Component Id="x64_cvextern.dll" Guid="0f6888c8-a6b4-4aed-8979-558d101d4891">
+                <File Id="x64_cvextern.dll" Name="cvextern.dll" Source="$(var.Classifier_TargetDir)x64\cvextern.dll" />
+            </Component>
+            <Component Id="x64_cvextern.lib" Guid="15ab112b-0162-4ad4-9478-f49787e9bc01">
+                <File Id="x64_cvextern.lib" Name="cvextern.lib" Source="$(var.Classifier_TargetDir)x64\cvextern.lib" />
+            </Component>
+            <Component Id="x64_msvcp140.dll" Guid="e5fe7c7d-f119-4814-b4ec-8c944a9f17a3">
+                <File Id="x64_msvcp140.dll" Name="msvcp140.dll" Source="$(var.Classifier_TargetDir)x64\msvcp140.dll" />
+            </Component>
+            <Component Id="x64_opencv_ffmpeg330_64.dll" Guid="d04b2ab3-a0fd-442a-8e8b-094ffca707bc">
+                <File Id="x64_opencv_ffmpeg330_64.dll" Name="opencv_ffmpeg330_64.dll" Source="$(var.Classifier_TargetDir)x64\opencv_ffmpeg330_64.dll" />
+            </Component>
+            <Component Id="x64_vcruntime140.dll" Guid="aef55e57-1db2-4d2f-ad7f-3802fee0cacb">
+                <File Id="x64_vcruntime140.dll" Name="vcruntime140.dll" Source="$(var.Classifier_TargetDir)x64\vcruntime140.dll" />
+            </Component>
+        </ComponentGroup>
+
+        <ComponentGroup Id="SQLSERVERTYPESX64_files" Directory="SQLSERVERTYPESX64">
+            <Component Id="SqlServerTypes_x64_msvcr120.dll" Guid="a474dd23-9bd1-438b-8de8-f802d39d5470">
+                <File Id="SqlServerTypes_x64_msvcr120.dll" Name="msvcr120.dll" Source="$(var.Classifier_TargetDir)SqlServerTypes\x64\msvcr120.dll" />
+            </Component>
+            <Component Id="SqlServerTypes_x64_SqlServerSpatial140.dll" Guid="720f11b0-fc2c-4732-9739-c32716e9ceb9">
+                <File Id="SqlServerTypes_x64_SqlServerSpatial140.dll" Name="SqlServerSpatial140.dll" Source="$(var.Classifier_TargetDir)SqlServerTypes\x64\SqlServerSpatial140.dll" />
+            </Component>
+        </ComponentGroup>
+    </Fragment>
+</Wix>
