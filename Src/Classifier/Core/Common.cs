@@ -6,6 +6,7 @@ using Emgu.CV.CvEnum;
 using Emgu.CV.Util;
 using Emgu.CV.XFeatures2D;
 using Microsoft.Win32;
+using NLog;
 using Syncfusion.Pdf;
 using Syncfusion.Pdf.Graphics;
 using Syncfusion.Pdf.Parsing;
@@ -25,7 +26,6 @@ namespace Classifier.Core
 {
     public static class Common
     {
-        #region File Methods
         public static OpenFileDialog BrowseForFiles(string filter)
         {
             return BrowseForFiles(false, filter);
@@ -48,14 +48,6 @@ namespace Classifier.Core
                 Multiselect = multiSelect
             };
             return filesDialog;
-        }
-
-        public static Task<DataTable> GetSpreadsheetDataTableAsync(string spreadsheetPath, string spreadsheetName)
-        {
-            return Task.Run(() =>
-            {
-                return GetSpreadsheetDataTable(spreadsheetPath, spreadsheetName);
-            });
         }
 
         public static DataTable GetSpreadsheetDataTable(string spreadsheetPath, string spreadsheetName)
@@ -92,7 +84,6 @@ namespace Classifier.Core
             }
             return datatable;
         }
-        #endregion
 
         public static void Resize(string imageFile, string outputFile, double scaleFactor)
         {
@@ -162,30 +153,6 @@ namespace Classifier.Core
             });
         }
 
-        public static Dictionary<string, string> ConvertPdfsToImages(List<string> pdfFiles)
-        {
-            var pdfImages = new Dictionary<string, string>();
-            using (var viewer = new PdfDocumentView())
-            {
-                var files = new List<FileInfo>();
-                pdfFiles.ForEach(c => files.Add(new FileInfo(c)));
-                foreach (var file in files.Where(c => c.Extension == ".pdf"))
-                {
-                    viewer.Load(file.FullName);
-                    var images = viewer.ExportAsImage(0, viewer.PageCount - 1);
-                    var imgCount = 1;
-                    foreach (var image in images)
-                    {
-                        var imgPath = Path.Combine(Common.TempStorage, $"{file.Name.Substring(0, file.Name.Length - 4)}.{imgCount}.png");
-                        pdfImages.Add(imgPath, file.FullName);
-                        image.Save(imgPath);
-                        imgCount++;
-                    }
-                }
-            }
-            return pdfImages;
-        }
-
         public static List<CriteriaImageModel> CreateCriteriaArrays(FileInfo[] criteriaFiles)
         {
             var criteriaImages = new List<CriteriaImageModel>();
@@ -212,50 +179,6 @@ namespace Classifier.Core
                 }
             }
             return criteriaImages;
-        }
-
-        public static void CreateImagePart(string filePath, DocumentCriteria criteria)
-        {
-            var cropPath = Path.Combine(TempStorage, "cropped.png");
-            if (File.Exists(cropPath)) File.Delete(cropPath);
-            using (var original = new Bitmap(filePath))
-            {
-                var originalWidth = original.Width;
-                var originalHeight = original.Height;
-                var positionX = criteria.PositionX;
-                var positionY = criteria.PositionY;
-                var scaleFactorX = 1.0;
-                var scaleFactorY = 1.0;
-                if ((criteria.BaseWidth != 0 && originalWidth != 0) && criteria.BaseWidth != originalWidth)
-                    scaleFactorX = ConvertDimensions(criteria.BaseWidth, originalWidth);
-                if ((criteria.BaseHeight != 0 && originalHeight != 0) && criteria.BaseHeight != originalHeight)
-                    scaleFactorY = ConvertDimensions(criteria.BaseHeight, originalHeight);
-                var scaledPositionX = criteria.PositionX / scaleFactorX;
-                var scaledPositionY = criteria.PositionY / scaleFactorY;
-                var scaledWidth = criteria.Width / scaleFactorX;
-                var scaledHeight = criteria.Height / scaleFactorY;
-                if ((scaledWidth + criteria.PositionX) > originalWidth)
-                {
-                    positionX = Convert.ToInt32(scaledPositionX);
-                }
-                if ((scaledHeight + criteria.PositionY) > originalHeight)
-                {
-                    positionY = Convert.ToInt32(scaledPositionY);
-                }
-                var scaledSize = new Size(Convert.ToInt32(scaledWidth), Convert.ToInt32(scaledHeight));
-                var startPoint = new Point(positionX, positionY);
-                var rect = new Rectangle(startPoint, scaledSize);
-                var croppedImage = (Bitmap)original.Clone(rect, original.PixelFormat);
-                croppedImage.Save(cropPath);
-            }
-        }
-
-        public static double ConvertDimensions(int first, int second)
-        {
-            var doubleFirst = Convert.ToDouble(first);
-            var doubleSecond = Convert.ToDouble(second);
-            var value = doubleFirst / doubleSecond;
-            return value;
         }
 
         public static List<DocumentSelectionModel> LoadDocumentSelectionModels()
@@ -289,18 +212,6 @@ namespace Classifier.Core
             });
         }
 
-        public static Task<Dictionary<string, string>> CopyImagesToTempFolderAsync(FileInfo file)
-        {
-            return Task.Run(() =>
-            {
-                var pdfImages = new Dictionary<string, string>();
-                var copyPath = Path.Combine(TempStorage, file.Name);
-                File.Copy(file.FullName, copyPath);
-                pdfImages.Add(copyPath, file.FullName);
-                return pdfImages;
-            });
-        }
-
         public static (List<FileNamingModel>, List<CriteriaImageModel>) SetNamingAndCriteria(string namingSpreadsheetPath)
         {
             var criteriaImages = new List<CriteriaImageModel>();
@@ -310,7 +221,6 @@ namespace Classifier.Core
                 var spreadsheetDataTable = GetSpreadsheetDataTable(namingSpreadsheetPath, "Reference");
                 if (spreadsheetDataTable != null)
                 {
-                    
                     foreach (DataRow dr in spreadsheetDataTable.Rows)
                     {
                         var serial = string.Empty;
@@ -340,7 +250,6 @@ namespace Classifier.Core
                 var pdfFilesList = files.Where(c => c.Extension == ".pdf").ToList();
                 var currentFile = 0;
                 var fileCount = pdfFilesList.Count;
-                var lockTarget = new object();
                 Parallel.ForEach(pdfFilesList, (file) =>
                 {
                     try
@@ -403,110 +312,14 @@ namespace Classifier.Core
             });
         }
 
-        public static Task SaveMatchedFilesAsync(List<CriteriaMatchModel> matchedFiles, List<FileNamingModel> namingModels, Dictionary<string, string> pdfImages, IEnumerable<string> pdfFiles, CancellationToken token)
-        {
-            return Task.Run(() =>
-            {
-                foreach (var item in matchedFiles)
-                {
-                    if (token.IsCancellationRequested)
-                        return;
-                    var fileNameWithPage = item.MatchedFileInfo.Name.Substring(0, item.MatchedFileInfo.Name.Length - 4);
-                    var fileNameSplit = fileNameWithPage.Split('.');
-                    var fileName = fileNameSplit[0];
-                    var matchedFile = pdfFiles.First(c => c.Contains(fileName));
-                    var matchedFileExtension = matchedFile.Substring(matchedFile.Length - 3);
-                    if (matchedFileExtension.Equals("pdf", StringComparison.CurrentCultureIgnoreCase))
-                    {
-                        ExtractPageFromPdf(item.MatchedFileInfo, item.DocumentType.DocumentType, pdfImages, namingModels);
-                    }
-                    else
-                    {
-                        CreatePdfFromImage(item.MatchedFileInfo, item.DocumentType.DocumentType, pdfImages, namingModels);
-                    }
-                }
-            });
-        }
-
-        public static void ExtractPageFromPdf(FileInfo file, string type, Dictionary<string, string> pdfImages, List<FileNamingModel> models = null)
-        {
-            var fileName = file.Name.Substring(0, file.Name.Length - 4);
-            if (models != null)
-            {
-                var fileNameSplit = fileName.Split('.');
-                var serialNumber = fileNameSplit[0];
-                var model = models.FirstOrDefault(c => c.Serial == serialNumber);
-                if (model != null)
-                {
-                    fileName = model.Tag;
-                }
-            }
-            var origPdf = pdfImages.First(c => c.Key == file.FullName);
-            var imagePath = origPdf.Key.Replace(".png", "");
-            var pageSplit = imagePath.Split('.');
-            var page = Convert.ToInt32(pageSplit[pageSplit.Length - 1]);
-            var loadedDocument = new PdfLoadedDocument(origPdf.Value);
-
-            var resultPath = Path.Combine(ResultsStorage, type);
-            using (var document = new PdfDocument())
-            {
-                var startIndex = page - 1;
-                var endIndex = page - 1;
-                document.ImportPageRange(loadedDocument, startIndex, endIndex);
-                var savePath = Path.Combine(resultPath, $"{fileName}.pdf");
-                if (File.Exists(savePath))
-                {
-                    savePath = Path.Combine(resultPath, $"{fileName}-1.pdf");
-                }
-                document.Save(savePath);
-                loadedDocument.Close(true);
-                document.Close(true);
-            }
-        }
-
-        public static void CreatePdfFromImage(FileInfo file, string type, Dictionary<string, string> pdfImages, List<FileNamingModel> models = null)
-        {
-            var fileName = file.Name.Substring(0, file.Name.Length - 4);
-            if (models != null)
-            {
-                var fileNameSplit = fileName.Split('.');
-                var serialNumber = fileNameSplit[0];
-                var model = models.FirstOrDefault(c => c.Serial == serialNumber);
-                if (model != null)
-                {
-                    fileName = model.Tag;
-                }
-            }
-            var origPdf = pdfImages.First(c => c.Key == file.FullName);
-            var resultPath = Path.Combine(ResultsStorage, type);
-            using (var pdf = new PdfDocument())
-            {
-                var section = pdf.Sections.Add();
-                var image = new PdfBitmap(origPdf.Key);
-                var frameCount = image.FrameCount;
-                for (var i = 0; i < frameCount; i++)
-                {
-                    var page = section.Pages.Add();
-                    section.PageSettings.Margins.All = 0;
-                    var graphics = page.Graphics;
-                    image.ActiveFrame = i;
-                    graphics.DrawImage(image, 0, 0, page.GetClientSize().Width, page.GetClientSize().Height);
-                }
-                var savePath = Path.Combine(resultPath, $"{fileName}.pdf");
-                if (File.Exists(savePath))
-                {
-                    savePath = Path.Combine(resultPath, $"{fileName}-1.pdf");
-                }
-                pdf.Save(savePath);
-                pdf.Close(true);
-            }
-        }
-
         public static readonly string AppStorage = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\Classifier";
+        public static readonly string LogStorage = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\Classifier\\Logs";
         public static readonly string TempStorage = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\Classifier\\temp";
         public static readonly string PdfPath = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\Classifier\\PDFs";
         public static readonly string CriteriaStorage = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\Classifier\\Criteria";
         public static readonly string UserCriteriaStorage = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\Classifier\\UserCriteria";
         public static readonly string ResultsStorage = $"C:\\Users\\{Environment.UserName}\\AppData\\Local\\Classifier\\Results";
+
+        public static ILogger Logger { get; set; }
     }
 }

@@ -6,7 +6,7 @@ using System.IO;
 
 namespace Classifier.Data
 {
-    //[DbConfigurationType(typeof(ClassifierDbConfiguration))]
+    [DbConfigurationType(typeof(ClassifierDbConfiguration))]
     public partial class ClassifierContext : DbContext
     {
         public ClassifierContext() : base(BuildConnectionString())

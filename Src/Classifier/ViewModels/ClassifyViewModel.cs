@@ -23,7 +23,6 @@ namespace Classifier.ViewModels
         public ClassifyViewModel()
         {
             PdfFiles = new ObservableCollection<string>();
-            _matchedFiles = new List<CriteriaMatchModel>();
             PdfFiles.CollectionChanged += PdfFiles_CollectionChanged;
             PdfImages = new Dictionary<string, string>();
             BrowseForFilesCommand = new RelayCommand(BrowseForFiles);
@@ -140,9 +139,14 @@ namespace Classifier.ViewModels
 
         public async Task ProcessDocumentsAsync()
         {
-            _matchedFiles = new List<CriteriaMatchModel>();
             CancelEnabled = true;
             ClassifyEnabled = false;
+            var tempDirectory = new DirectoryInfo(Common.TempStorage);
+            var tempFiles = tempDirectory.GetFiles();
+            foreach(var file in tempFiles)
+            {
+                File.Delete(file.FullName);
+            }
             CancelTokenSource = new CancellationTokenSource();
             var token = CancelTokenSource.Token;
             var prog = new Progress<TaskProgress>();
@@ -179,8 +183,7 @@ namespace Classifier.ViewModels
             var criteriaAndNaming = Common.SetNamingAndCriteria(NamingSpreadsheetPath);
             NamingModels = new List<FileNamingModel>(criteriaAndNaming.Item1);
             _criteriaImages = new List<CriteriaImageModel>(criteriaAndNaming.Item2);
-            var tempDirectoryInfo = new DirectoryInfo(Common.TempStorage);
-            var files = tempDirectoryInfo.GetFiles();
+            var files = tempDirectory.GetFiles();
             eta = new EtaCalculator(3, 30);
             await ProcessSelectedDocumentsAsync(prog, token, types, eta, files.ToList());
             DialogTitle = "Complete";
@@ -270,31 +273,6 @@ namespace Classifier.ViewModels
         #endregion
 
         #region Post Classification
-        public Task SaveMatchedFilesAsync(CancellationToken token)
-        {
-            return Task.Run(() =>
-            {
-                foreach (var item in _matchedFiles)
-                {
-                    if (token.IsCancellationRequested)
-                        return;
-                    var fileNameWithPage = item.MatchedFileInfo.Name.Substring(0, item.MatchedFileInfo.Name.Length - 4);
-                    var fileNameSplit = fileNameWithPage.Split('.');
-                    var fileName = fileNameSplit[0];
-                    var matchedFile = PdfFiles.First(c => c.Contains(fileName));
-                    var matchedFileExtension = matchedFile.Substring(matchedFile.Length - 3);
-                    if (matchedFileExtension.Equals("pdf", StringComparison.CurrentCultureIgnoreCase))
-                    {
-                        ExtractPageFromPdf(item.MatchedFileInfo, item.DocumentType.DocumentType, NamingModels);
-                    }
-                    else
-                    {
-                        CreatePdfFromImage(item.MatchedFileInfo, item.DocumentType.DocumentType, NamingModels);
-                    }
-                }
-            });
-        }
-
         public void ExtractPageFromPdf(FileInfo file, string type, List<FileNamingModel> models = null)
         {
             var fileName = file.Name.Substring(0, file.Name.Length - 4);
@@ -468,8 +446,6 @@ namespace Classifier.ViewModels
             set => Set(ref _cancelEnabled, value);
         }
         private bool _cancelEnabled;
-
-        private List<CriteriaMatchModel> _matchedFiles;
 
         public string ProgressText2
         {
