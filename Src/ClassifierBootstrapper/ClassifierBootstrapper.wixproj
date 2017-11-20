@@ -43,6 +43,7 @@
     <Content Include="SharedManagementObjects.msi" />
     <Content Include="SqlLocalDB.MSI" />
     <Content Include="SQLSysClrTypes.msi" />
+    <Content Include="vc_redist.x64.exe" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ClassifierSetup\ClassifierSetup.wixproj">

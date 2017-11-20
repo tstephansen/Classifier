@@ -9,64 +9,66 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
      xmlns:bal="http://schemas.microsoft.com/wix/BalExtension"
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
-    <Bundle Name="Classifier"
-	        Version="!(bind.packageVersion.ClassifierMsi)"
-          Manufacturer="LandmarkDevs"
-          UpgradeCode="$(var.ProductUpgradeCode)"
-          IconSourceFile="Icon.ico">
-        <BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.RtfLicense">
-            <bal:WixStandardBootstrapperApplication
-                  LicenseFile="EULA.rtf"
-                  ShowVersion="yes"/>
-        </BootstrapperApplicationRef>
+  <Bundle Name="Classifier"
+        Version="!(bind.packageVersion.ClassifierMsi)"
+        Manufacturer="LandmarkDevs"
+        UpgradeCode="$(var.ProductUpgradeCode)"
+        IconSourceFile="Icon.ico">
+    <BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.RtfLicense">
+      <bal:WixStandardBootstrapperApplication
+            LicenseFile="EULA.rtf"
+            ShowVersion="yes"/>
+    </BootstrapperApplicationRef>
 
-        <util:RegistrySearch Root="HKLM"
-                             Key="SOFTWARE\Microsoft\Net Framework Setup\NDP\v4\Full"
-                             Value="Release"
-                             Variable="Net4FullVersion" />
-        <util:RegistrySearch Root="HKLM"
-                             Key="SOFTWARE\Microsoft\Net Framework Setup\NDP\v4\Full"
-                             Value="Release"
-                             Variable="Net4x64FullVersion"
-                             Win64="yes" />
-        <util:RegistrySearch Root="HKCR"
-                             Key="Microsoft.ACE.OLEDB.12.0\CLSID"
-                             Result="exists"
-                             Win64="no"
-                             Variable="ACEOLEDB1232"/>
-        <util:RegistrySearch Root="HKCR"
-                             Key="Microsoft.Jet.OLEDB.4.0\CLSID"
-                             Result="exists"
-                             Win64="no"
-                             Variable="JETOLEDB32"/>
-        <util:RegistrySearch Root="HKLM"
-                             Key="SOFTWARE\Microsoft\Microsoft SQL Server Local DB\Installed Versions\11.0"
-                             Result="exists"
-                             Variable="SQLLOCALDB"/>
-        
-        <Chain>
-            <ExePackage Id="JetOledb"
-                        Name="Access Database Engine"
-                        Cache="no"
-                        InstallCondition="NOT(JETOLEDB32 = 1)"
-                        Compressed="yes"
-                        PerMachine="yes"
-                        Permanent="no"
-                        SourceFile="AccessDatabaseEngine2007.exe"
-                        Vital="yes"
-                        InstallCommand="/quiet"/>
-            <ExePackage Id="AceOledb"
-                        Name="Access Database Engine"
-                        Cache="no"
-                        InstallCondition="NOT(ACEOLEDB1232 = 1)"
-                        Compressed="yes"
-                        PerMachine="yes"
-                        Permanent="no"
-                        SourceFile="AccessDatabaseEngine2010.exe"
-                        Vital="yes"
-                        InstallCommand="/quiet"/>
-            
-            <!--<ExePackage Id="Net45"
+    <util:RegistrySearch Root="HKLM"
+                         Key="SOFTWARE\Microsoft\Net Framework Setup\NDP\v4\Full"
+                         Value="Release"
+                         Variable="Net4FullVersion" />
+    <util:RegistrySearch Root="HKLM"
+                         Key="SOFTWARE\Microsoft\Net Framework Setup\NDP\v4\Full"
+                         Value="Release"
+                         Variable="Net4x64FullVersion"
+                         Win64="yes" />
+    <util:RegistrySearch Root="HKCR"
+                         Key="Microsoft.ACE.OLEDB.12.0\CLSID"
+                         Result="exists"
+                         Win64="no"
+                         Variable="ACEOLEDB1232"/>
+    <util:RegistrySearch Root="HKCR"
+                         Key="Microsoft.Jet.OLEDB.4.0\CLSID"
+                         Result="exists"
+                         Win64="no"
+                         Variable="JETOLEDB32"/>
+    <util:RegistrySearch Root="HKLM"
+                         Key="SOFTWARE\Microsoft\Microsoft SQL Server Local DB\Installed Versions\11.0"
+                         Result="exists"
+                         Variable="SQLLOCALDB"/>
+    <util:FileSearch Id="GetVC14X64Exists" Condition="VersionNT64" Variable="vc14x64Exists" Path="[SystemFolder]vcruntime140.dll" Result="exists"/>
+    <util:FileSearch Id="GetVC14X64Version" Condition="VersionNT64" Variable="vc14x64Version" Path="[SystemFolder]vcruntime140.dll" Result="version"/>
+    
+
+    <Chain>
+      <ExePackage Id="JetOledb"
+                  Name="Access Database Engine"
+                  Cache="no"
+                  InstallCondition="NOT(JETOLEDB32 = 1)"
+                  Compressed="yes"
+                  PerMachine="yes"
+                  Permanent="no"
+                  SourceFile="AccessDatabaseEngine2007.exe"
+                  Vital="yes"
+                  InstallCommand="/quiet"/>
+      <ExePackage Id="AceOledb"
+                  Name="Access Database Engine"
+                  Cache="no"
+                  InstallCondition="NOT(ACEOLEDB1232 = 1)"
+                  Compressed="yes"
+                  PerMachine="yes"
+                  Permanent="no"
+                  SourceFile="AccessDatabaseEngine2010.exe"
+                  Vital="yes"
+                  InstallCommand="/quiet"/>
+      <!--<ExePackage Id="Net45"
                         Name="Microsoft .NET Framework 4.6.2 Setup"
                         Cache="no"
                         Compressed="no"
@@ -78,35 +80,48 @@
                         DownloadUrl="http://go.microsoft.com/fwlink/?LinkId=780600"
                         DetectCondition="(Net4FullVersion >= $(var.NetFx462MinRelease)) AND (NOT VersionNT64 OR (Net4x64FullVersion >= $(var.NetFx462MinRelease)))"
                         InstallCondition="(VersionNT >= v6.0 OR VersionNT64 >= v6.0) AND (NOT (Net4FullVersion >= $(var.NetFx462MinRelease) OR Net4x64FullVersion >= $(var.NetFx462MinRelease)))"/>-->
-            
-            <ExePackage Id="Net462"
-                        Name="Microsoft .NET Framework 4.6.2 Setup"
-                        Cache="no"
-                        Compressed="yes"
-                        PerMachine="yes"
-                        Permanent="yes"
-                        SourceFile="NDP462-KB3151802-Web.exe"
-                        Vital="yes"
-                        InstallCommand="/q"
-                        DetectCondition="(Net4FullVersion >= $(var.NetFx462MinRelease)) AND (NOT VersionNT64 OR (Net4x64FullVersion >= $(var.NetFx462MinRelease)))"
-                        InstallCondition="(VersionNT >= v6.0 OR VersionNT64 >= v6.0) AND (NOT (Net4FullVersion >= $(var.NetFx462MinRelease) OR Net4x64FullVersion >= $(var.NetFx462MinRelease)))"/>
-            
-            <RollbackBoundary />
 
-            <MsiPackage Id="SQLDBMSI"
-                        SourceFile="SqlLocalDB.MSI"
-                        DisplayInternalUI="no"
-                        Compressed="yes"
-                        Vital="yes"
-                        InstallCondition="NOT(SQLLOCALDB = 1)">
-                <MsiProperty Name="IACCEPTSQLLOCALDBLICENSETERMS" Value="YES" />
-            </MsiPackage>
-            
-            <MsiPackage Id="ClassifierMsi"
-                      SourceFile="$(var.SetupMsi)"
-                      DisplayInternalUI="no"
-                      Compressed="yes"
-                      Vital="yes" />
-        </Chain>
-    </Bundle>
+      <ExePackage Id="Net462"
+                  Name="Microsoft .NET Framework 4.6.2 Setup"
+                  Cache="no"
+                  Compressed="yes"
+                  PerMachine="yes"
+                  Permanent="yes"
+                  SourceFile="NDP462-KB3151802-Web.exe"
+                  Vital="yes"
+                  InstallCommand="/q"
+                  DetectCondition="(Net4FullVersion >= $(var.NetFx462MinRelease)) AND (NOT VersionNT64 OR (Net4x64FullVersion >= $(var.NetFx462MinRelease)))"
+                  InstallCondition="(VersionNT >= v6.0 OR VersionNT64 >= v6.0) AND (NOT (Net4FullVersion >= $(var.NetFx462MinRelease) OR Net4x64FullVersion >= $(var.NetFx462MinRelease)))"/>
+
+      <RollbackBoundary />
+
+      <ExePackage Id="VCRedist"
+                    Name="Visual Studio C++ 2015"
+                    Cache="no"
+                    Compressed="yes"
+                    PerMachine="yes"
+                    Permanent="no"
+                    SourceFile="vc_redist.x64.exe"
+                    Vital="yes"
+                    InstallCommand="/q"
+                    DetectCondition="vc14x64Exists AND vc14x64Version &gt;= v14.0.23026"
+                    InstallCondition="vc14x64Exists AND vc14x64Version &lt; v14.0.23026"/>
+
+
+      <MsiPackage Id="SQLDBMSI"
+                  SourceFile="SqlLocalDB.MSI"
+                  DisplayInternalUI="no"
+                  Compressed="yes"
+                  Vital="yes"
+                  InstallCondition="NOT(SQLLOCALDB = 1)">
+        <MsiProperty Name="IACCEPTSQLLOCALDBLICENSETERMS" Value="YES" />
+      </MsiPackage>
+
+      <MsiPackage Id="ClassifierMsi"
+                SourceFile="$(var.SetupMsi)"
+                DisplayInternalUI="no"
+                Compressed="yes"
+                Vital="yes" />
+    </Chain>
+  </Bundle>
 </Wix>
