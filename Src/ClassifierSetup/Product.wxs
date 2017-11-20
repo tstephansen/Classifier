@@ -1,16 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?define ProductId = "28DB099F-4B2F-4B43-94E8-C3BF471DBFA3"?>
-<?define ProductVersion = "1.0.0.1"?>
+<?define ProductVersion = "1.0.0.2"?>
 <?define ProductUpgradeCode = "6756D54F-9AB3-4400-A9ED-DBCD15FC3926"?>
+<!--<?if $(var.Platform) = x64 ?>
+<?define bitness = "(64 bit)" ?>
+<?define Win64 = "yes" ?>
+<?define PlatformProgramFilesFolder = "ProgramFiles64Folder" ?>
+<?else ?>
+<?define bitness = "(32 bit)" ?>
+<?define Win64 = "no" ?>
+<?define PlatformProgramFilesFolder = "ProgramFilesFolder" ?>
+<?endif ?>-->
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension" xmlns:util="http://schemas.microsoft.com/wix/UtilExtension" xmlns:bal="http://schemas.microsoft.com/wix/BalExtension">
     <?define Classifier_TargetDir=$(var.Classifier.TargetDir)?>
 
-    <Product Id="*" Name="ClassifierSetup" Language="1033" Version="$(var.ProductVersion)" Manufacturer="Microsoft" UpgradeCode="$(var.ProductUpgradeCode)">
+    <Product Id="*" Name="Classifier" Language="1033" Version="$(var.ProductVersion)" Manufacturer="Microsoft" UpgradeCode="$(var.ProductUpgradeCode)">
         <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" Platform="x64" />
         <MediaTemplate EmbedCab="yes" />
 
         <Directory Id="TARGETDIR" Name="SourceDir">
-            <Directory Id="ProgramFilesFolder">
+            <Directory Id="ProgramFiles64Folder">
                 <Directory Id="ProgramGroup" Name="LandmarkDevs">
                     <Directory Id="INSTALLDIR" Name="Classifier">
                         <Directory Id="SQLSERVERTYPES" Name="SqlServerTypes">
@@ -94,9 +103,9 @@
             <Component Id="Emgu.CV.UI.dll" Guid="c3deab1e-71f7-4a1c-b8ec-5bfdb2ccc40d">
                 <File Id="Emgu.CV.UI.dll" Name="Emgu.CV.UI.dll" Source="$(var.Classifier_TargetDir)Emgu.CV.UI.dll" />
             </Component>
-            <Component Id="Emgu.CV.UI.GL.dll" Guid="a2917174-f483-4219-97f1-17a266116ee7">
+            <!--<Component Id="Emgu.CV.UI.GL.dll" Guid="a2917174-f483-4219-97f1-17a266116ee7">
                 <File Id="Emgu.CV.UI.GL.dll" Name="Emgu.CV.UI.GL.dll" Source="$(var.Classifier_TargetDir)Emgu.CV.UI.GL.dll" />
-            </Component>
+            </Component>-->
             <Component Id="Emgu.CV.World.dll" Guid="c359882e-fc53-4fd6-bc50-e071bec5bef3">
                 <File Id="Emgu.CV.World.dll" Name="Emgu.CV.World.dll" Source="$(var.Classifier_TargetDir)Emgu.CV.World.dll" />
             </Component>
@@ -304,8 +313,8 @@
             <Component Id="Microsoft.SqlServer.XE.Core.dll" Guid="a554e7a3-22a2-4685-9c03-98f6968ed34e">
               <File Id="Microsoft.SqlServer.XE.Core.dll" Name="Microsoft.SqlServer.XE.Core.dll" Source="$(var.Classifier_TargetDir)Microsoft.SqlServer.XE.Core.dll" />
             </Component>
-            <Component Id="x64_concrt140.dll1" Guid="70B80CFC-A539-45C4-986D-2DEFA7229BE9">
-                <File Id="x64_concrt140.dll1" Name="concrt140.dll" Source="$(var.Classifier_TargetDir)concrt140.dll" />
+            <Component Id="x64_concrt140.dll1" Guid="1CE4CE69-3A8E-4275-8CF9-EF290B699578">
+                <File Id="x64_concrt140.dll1" Name="concrt140.dll" Source="$(var.Classifier_TargetDir)x64\concrt140.dll" />
             </Component>
             <Component Id="x64_cvextern.dll1" Guid="EC029737-F6F3-4B75-94EF-82ADE2B7E178">
                 <File Id="x64_cvextern.dll1" Name="cvextern.dll" Source="$(var.Classifier_TargetDir)cvextern.dll" />

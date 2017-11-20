@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?define ProductId = "38D56906-8DB9-4DB5-9C56-772DED3DC64F"?>
 <?define NetFx462MinRelease = 394806 ?>
-<?define ProductVersion = "1.0.0.1"?>
+<?define ProductVersion = "1.0.0.2"?>
 <?define SetupMsi = $(var.ClassifierSetup.TargetPath)?>
 <?define ProductUpgradeCode = "DC6EB3E5-5EAE-45E5-AAAB-DFF10CC6CFE9"?>
 <?define NetFx462WebLink = http://go.microsoft.com/fwlink/?LinkId=780596 ?>
@@ -43,18 +43,7 @@
                              Key="SOFTWARE\Microsoft\Microsoft SQL Server Local DB\Installed Versions\11.0"
                              Result="exists"
                              Variable="SQLLOCALDB"/>
-        <!--<util:RegistrySearch Root="HKLM"
-                             Key="SOFTWARE\Microsoft\Microsoft SQL Server 2012 Redist\SharedManagementObjects"
-                             Result="exists"
-                             Win64="yes"
-                             Variable="SQLSMO"/>
-        <util:RegistrySearch Root="HKLM"
-                             Key="SOFTWARE\Microsoft\Microsoft SQL Server 2012 Redist\SQL Server System CLR Types"
-                             Result="exists"
-                             Win64="yes"
-                             Variable="SQLCLR"/>-->
         
-
         <Chain>
             <ExePackage Id="JetOledb"
                         Name="Access Database Engine"
@@ -77,13 +66,26 @@
                         Vital="yes"
                         InstallCommand="/quiet"/>
             
-            <ExePackage Id="Net45"
+            <!--<ExePackage Id="Net45"
+                        Name="Microsoft .NET Framework 4.6.2 Setup"
+                        Cache="no"
+                        Compressed="no"
+                        PerMachine="yes"
+                        Permanent="yes"
+                        SourceFile="NDP462-KB3151800-x86-x64-AllOS-ENU.exe"
+                        Vital="yes"
+                        InstallCommand="/q"
+                        DownloadUrl="http://go.microsoft.com/fwlink/?LinkId=780600"
+                        DetectCondition="(Net4FullVersion >= $(var.NetFx462MinRelease)) AND (NOT VersionNT64 OR (Net4x64FullVersion >= $(var.NetFx462MinRelease)))"
+                        InstallCondition="(VersionNT >= v6.0 OR VersionNT64 >= v6.0) AND (NOT (Net4FullVersion >= $(var.NetFx462MinRelease) OR Net4x64FullVersion >= $(var.NetFx462MinRelease)))"/>-->
+            
+            <ExePackage Id="Net462"
                         Name="Microsoft .NET Framework 4.6.2 Setup"
                         Cache="no"
                         Compressed="yes"
                         PerMachine="yes"
                         Permanent="yes"
-                        SourceFile="NDP462-KB3151800-x86-x64-AllOS-ENU.exe"
+                        SourceFile="NDP462-KB3151802-Web.exe"
                         Vital="yes"
                         InstallCommand="/q"
                         DetectCondition="(Net4FullVersion >= $(var.NetFx462MinRelease)) AND (NOT VersionNT64 OR (Net4x64FullVersion >= $(var.NetFx462MinRelease)))"
@@ -100,22 +102,9 @@
                 <MsiProperty Name="IACCEPTSQLLOCALDBLICENSETERMS" Value="YES" />
             </MsiPackage>
             
-            <!--<MsiPackage Id="SMOMSI"
-                        SourceFile="SharedManagementObjects.msi"
-                        DisplayInternalUI="yes"
-                        Compressed="yes"
-                        Vital="yes"
-                        InstallCondition="NOT(SQLSMO = 1)"/>
-            <MsiPackage Id="CLRMSI"
-                        SourceFile="SQLSysClrTypes.msi"
-                        DisplayInternalUI="yes"
-                        Compressed="yes"
-                        Vital="yes"
-                        InstallCondition="NOT(SQLCLR = 1)"/>-->
-            
             <MsiPackage Id="ClassifierMsi"
                       SourceFile="$(var.SetupMsi)"
-                      DisplayInternalUI="yes"
+                      DisplayInternalUI="no"
                       Compressed="yes"
                       Vital="yes" />
         </Chain>

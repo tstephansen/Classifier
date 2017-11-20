@@ -8,7 +8,7 @@
     <Item Key="x64" Value="X64CVDIR" />
     <Item Key="SqlServerTypes\x64" Value="SQLSERVERTYPESX64" />
     <Item Key="SqlServerTypes" Value="SQLSERVERTYPES" />
-    <Item Key="SqlServerTypes\x86" Value="SQLSERVERTYPESX86" />
+    <Item Key="SqlServerTypes\x86" Value="ProgramFiles64Folder" />
   </DirectoryMappings>
   <FileMappings />
   <DeploySymbols>false</DeploySymbols>

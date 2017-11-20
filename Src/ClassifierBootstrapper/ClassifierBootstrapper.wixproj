@@ -6,7 +6,7 @@
     <ProductVersion>3.11</ProductVersion>
     <ProjectGuid>ac28d8d7-d24b-4d26-aaf8-70774c8da37f</ProjectGuid>
     <SchemaVersion>2.0</SchemaVersion>
-    <OutputName>Classifier</OutputName>
+    <OutputName>Classifier Setup</OutputName>
     <OutputType>Bundle</OutputType>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
@@ -35,10 +35,11 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="AccessDatabaseEngine2007.exe" />
+    <Content Include="AccessDatabaseEngine2010.exe" />
     <Content Include="ClassifierBootstrapper.wax" />
     <Content Include="EULA.rtf" />
     <Content Include="Icon.ico" />
-    <Content Include="NDP462-KB3151800-x86-x64-AllOS-ENU.exe" />
+    <Content Include="NDP462-KB3151802-Web.exe" />
     <Content Include="SharedManagementObjects.msi" />
     <Content Include="SqlLocalDB.MSI" />
     <Content Include="SQLSysClrTypes.msi" />

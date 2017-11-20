@@ -112,9 +112,11 @@ namespace Classifier.ViewModels
             _criteriaFilePaths = new List<string>();
             ClassifyEnabled = false;
             var pdfFiles = new List<string> { PdfPath };
-            await Common.ConvertPdfsToImagesAsync(pdfFiles);
-            var images = await Common.CopyImagesToTempFolderAsync(pdfFiles);
-            PdfImages = new Dictionary<string, string>(images);
+            //await Common.ConvertPdfsToImagesAsync(pdfFiles);
+            //var images = await Common.CopyImagesToTempFolderAsync(pdfFiles);
+            var pdfImages = await Common.ConvertPdfsToImagesAsync(pdfFiles);
+            var pngImages = await Common.CopyImagesToTempFolderAsync(pdfFiles);
+            PdfImages = new Dictionary<string, string>(pdfImages);
             var types = new List<DocumentTypes>();
             List<DocumentCriteria> documentCriteria = null;
             using (var context = new ClassifierContext())
