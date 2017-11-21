@@ -111,9 +111,13 @@ namespace Classifier.ViewModels
         {
             _criteriaFilePaths = new List<string>();
             ClassifyEnabled = false;
+            var tempDirectoryInfo = new DirectoryInfo(Common.TempStorage);
+            var tempFiles = tempDirectoryInfo.GetFiles();
+            foreach(var file in tempFiles)
+            {
+                File.Delete(file.FullName);
+            }
             var pdfFiles = new List<string> { PdfPath };
-            //await Common.ConvertPdfsToImagesAsync(pdfFiles);
-            //var images = await Common.CopyImagesToTempFolderAsync(pdfFiles);
             var pdfImages = await Common.ConvertPdfsToImagesAsync(pdfFiles);
             var pngImages = await Common.CopyImagesToTempFolderAsync(pdfFiles);
             PdfImages = new Dictionary<string, string>(pdfImages);
@@ -130,7 +134,14 @@ namespace Classifier.ViewModels
                 documentCriteria = context.DocumentCriteria.ToList();
             }
             await Common.CreateCriteriaFilesAsync(documentCriteria, types);
-            var tempDirectoryInfo = new DirectoryInfo(Common.TempStorage);
+            var criteriaFolder = new DirectoryInfo(Common.CriteriaStorage);
+            _criteriaFilePaths = new List<string>();
+            var criteriaFiles = criteriaFolder.GetFiles();
+            foreach(var o in criteriaFiles)
+            {
+                _criteriaFilePaths.Add(o.FullName);
+            }
+            tempDirectoryInfo = new DirectoryInfo(Common.TempStorage);
             var files = tempDirectoryInfo.GetFiles();
             await ProcessSelectedDocumentsAsync(files.ToList());
             ClassifyEnabled = true;

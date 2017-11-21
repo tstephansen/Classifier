@@ -11,14 +11,8 @@
         WindowState="Maximized"
         mc:Ignorable="d">
     <Grid>
-        <ScrollViewer HorizontalAlignment="Stretch"
-                      VerticalAlignment="Stretch"
-                      HorizontalScrollBarVisibility="Visible"
-                      VerticalScrollBarVisibility="Visible">
-            <Image x:Name="ImageBox"
-                   HorizontalAlignment="Stretch"
-                   VerticalAlignment="Stretch"
-                   Stretch="UniformToFill" />
-        </ScrollViewer>
+        <Viewbox HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <Image x:Name="ImageBox" Stretch="UniformToFill" />
+        </Viewbox>
     </Grid>
 </Window>

@@ -3,12 +3,13 @@ using Classifier.Data;
 using LandmarkDevs.Core.Infrastructure;
 using LandmarkDevs.Core.Shared;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
+using NLog;
+using System.Data;
+using System.Data.SqlClient;
 
 namespace Classifier.ViewModels
 {
@@ -21,6 +22,7 @@ namespace Classifier.ViewModels
             RemoveCriteriaCommand = new RelayCommand(RemoveCriteria);
             DocumentTypeChangedCommand = new RelayCommand(LoadCriterion);
             SetRequiredScoreCommand = new RelayCommand(SetRequiredScore);
+            ImportCriteriaCommand = new RelayCommand(async () => await ImportCriteriaAsync());
             LoadDocumentTypes();
         }
 
@@ -30,9 +32,60 @@ namespace Classifier.ViewModels
         public IRelayCommand RemoveDocumentTypeCommand { get; }
         public IRelayCommand DocumentTypeChangedCommand { get; }
         public IRelayCommand SetRequiredScoreCommand { get; }
+        public IRelayCommand ImportCriteriaCommand { get; }
         #endregion
 
         #region Methods
+        public Task ImportCriteriaAsync()
+        {
+            return Task.Run(() =>
+            {
+                var files = Common.BrowseForFiles(false, "SQL Script (*.sql)|*.sql");
+                if (files.ShowDialog() != true)
+                    return;
+                try
+                {
+                    var builder = new SqlConnectionStringBuilder(@"Server=(localdb)\v11.0;Integrated Security=true;AttachDbFileName=|DataDirectory|ClassifierDb.mdf;")
+                    {
+                        AttachDBFilename = Path.Combine(Common.AppStorage, "ClassifierDb.mdf")
+                    };
+                    var connString = builder.ConnectionString;
+                    using (var conn = new SqlConnection(connString))
+                    {
+                        try
+                        {
+                            if (conn.State == ConnectionState.Closed) conn.Open();
+                            var commands = File.ReadLines(files.FileName);
+                            foreach(var line in commands)
+                            {
+                                using (var cmd = new SqlCommand(line, conn))
+                                {
+                                    cmd.ExecuteNonQuery();
+                                }
+                            }
+                            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                            {
+                                LoadDocumentTypes();
+                                System.Windows.MessageBox.Show("Import has finished.", "Complete");
+                            });
+                        }
+                        catch(Exception ex)
+                        {
+                            Common.Logger.Log(LogLevel.Error, ex);
+                        }
+                        finally
+                        {
+                            if (conn.State == ConnectionState.Open) conn.Close();
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Common.Logger.Log(LogLevel.Error, ex);
+                }
+            });
+        }
+
         public void LoadDocumentTypes()
         {
             using(var context = new ClassifierContext())

@@ -19,7 +19,7 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <StackPanel Grid.Row="0"
-                    HorizontalAlignment="Left"
+                    HorizontalAlignment="Center"
                     Orientation="Horizontal">
             <Label VerticalAlignment="Center" Content="Document Type:" />
             <TextBox MinWidth="120"
@@ -35,9 +35,12 @@
             <Button VerticalAlignment="Center"
                     Command="{Binding SetRequiredScoreCommand}"
                     Content="Set Required Score" />
+            <Button VerticalAlignment="Center"
+                    Command="{Binding ImportCriteriaCommand}"
+                    Content="Import Criteria From Script" />
         </StackPanel>
         <StackPanel Grid.Row="1"
-                    HorizontalAlignment="Left"
+                    HorizontalAlignment="Center"
                     Orientation="Horizontal">
             <Button Command="{Binding RemoveDocumentTypeCommand}" Content="Remove Doc. Type" />
             <Button Command="{Binding RemoveCriteriaCommand}" Content="Remove Criteria" />

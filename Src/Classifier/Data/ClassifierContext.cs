@@ -5,11 +5,11 @@ using Classifier.Core;
 
 namespace Classifier.Data
 {
-    [DbConfigurationType(typeof(ClassifierDbConfiguration))]
     public class ClassifierContext : DbContext
     {
         public ClassifierContext() : base(BuildConnectionString())
         {
+            Database.SetInitializer(new CreateDatabaseIfNotExists<ClassifierContext>());
         }
 
         public static string BuildConnectionString()
