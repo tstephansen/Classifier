@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?define ProductId = "38D56906-8DB9-4DB5-9C56-772DED3DC64F"?>
 <?define NetFx462MinRelease = 394806 ?>
-<?define ProductVersion = "1.0.0.4"?>
+<?define ProductVersion = "1.0.0.5"?>
 <?define SetupMsi = $(var.ClassifierSetup.TargetPath)?>
 <?define ProductUpgradeCode = "DC6EB3E5-5EAE-45E5-AAAB-DFF10CC6CFE9"?>
 <?define NetFx462WebLink = http://go.microsoft.com/fwlink/?LinkId=780596 ?>
@@ -95,7 +95,7 @@
                     PerMachine="yes"
                     Permanent="no"
                     SourceFile="vc_redist.x64.exe"
-                    Vital="yes"
+                    Vital="no"
                     InstallCommand="/q"
                     DetectCondition="vc14x64Exists AND vc14x64Version &gt;= v14.0.23026.0"
                     InstallCondition="NOT(vc14x64Exists)"/>
