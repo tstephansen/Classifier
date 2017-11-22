@@ -1,0 +1,37 @@
+version: 1.0.0.{build}
+branches:
+  only:
+  - master
+image: Visual Studio 2017
+configuration: Release
+platform: x64
+assembly_info:
+  patch: true
+  file: '**\AssemblyInfo.*'
+  assembly_version: '{version}'
+  assembly_file_version: '{version}'
+  assembly_informational_version: '{version}'
+before_build:
+- ps: >-
+    nuget restore
+
+    foreach ($file in Get-ChildItem -Include *.wxs -Recurse) { (Get-Content $file.FullName) -replace '0.0.1.0', APPVEYOR_BUILD_VERSION | Out-File $file.FullName -Encoding utf8 }
+build:
+  verbosity: minimal
+notifications:
+- provider: Email
+  to:
+  - tim@landmarkdevs.com
+  subject: '[AppVeyor] Classifier Build Success'
+  message: Classifier has been built successfully.
+  on_build_success: true
+  on_build_failure: false
+  on_build_status_changed: false
+- provider: Email
+  to:
+  - tim@landmarkdevs.com
+  subject: '[AppVeyor] Classifier Build Failed'
+  message: Classifier has failed to build.
+  on_build_success: false
+  on_build_failure: true
+  on_build_status_changed: false

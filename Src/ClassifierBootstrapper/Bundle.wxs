@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?define ProductId = "38D56906-8DB9-4DB5-9C56-772DED3DC64F"?>
 <?define NetFx462MinRelease = 394806 ?>
-<?define ProductVersion = "1.0.0.6"?>
+<?define ProductVersion = "0.0.1.0"?>
 <?define SetupMsi = $(var.ClassifierSetup.TargetPath)?>
 <?define ProductUpgradeCode = "DC6EB3E5-5EAE-45E5-AAAB-DFF10CC6CFE9"?>
 <?define NetFx462WebLink = http://go.microsoft.com/fwlink/?LinkId=780596 ?>
@@ -22,11 +22,11 @@
 
     <util:FileSearch Id="GetVC14X64Exists" 
                      Variable="vc14x64Exists" 
-                     Path="[WindowsFolder]System32\vcruntime140.dll" 
+                     Path="[WindowsVolume]Windows\System32\vcruntime140.dll" 
                      Result="exists"/>
     <util:FileSearch Id="GetVC14X64Version" 
                      Variable="vc14x64Version"
-                     Path="[WindowsFolder]System32\vcruntime140.dll"
+                     Path="[WindowsVolume]Windows\System32\vcruntime140.dll"
                      Result="version"/>
     <util:RegistrySearch Root="HKLM"
                          Key="SOFTWARE\Microsoft\Net Framework Setup\NDP\v4\Full"
@@ -97,8 +97,7 @@
                     SourceFile="vc_redist.x64.exe"
                     Vital="no"
                     InstallCommand="/q"
-                    DetectCondition="vc14x64Exists AND vc14x64Version &gt;= v14.0.23026.0"
-                    InstallCondition="NOT(vc14x64Exists)"/>
+                    InstallCondition="NOT(vc14x64Exists = 1)"/>
       <MsiPackage Id="SQLDBMSI"
                   SourceFile="SqlLocalDB.MSI"
                   DisplayInternalUI="no"

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?define ProductId = "28DB099F-4B2F-4B43-94E8-C3BF471DBFA3"?>
-<?define ProductVersion = "1.0.0.6"?>
+<?define ProductVersion = "0.0.1.0"?>
 <?define ProductUpgradeCode = "6756D54F-9AB3-4400-A9ED-DBCD15FC3926"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension" xmlns:util="http://schemas.microsoft.com/wix/UtilExtension" xmlns:bal="http://schemas.microsoft.com/wix/BalExtension">
     <?define Classifier_TargetDir=$(var.Classifier.TargetDir)?>
