@@ -17,7 +17,19 @@ before_build:
 
     foreach ($file in Get-ChildItem -Include *.wxs -Recurse) { (Get-Content $file.FullName) -replace '0.0.1.0', $env:APPVEYOR_BUILD_VERSION | Out-File $file.FullName -Encoding utf8 }
 build:
-  verbosity: minimal
+  verbosity: normal
+after_build:
+- cmd: 7z a Classifier.zip Src\ClassifierBootstrapper\bin\x64\Release\*.exe
+artifacts:
+- path: Src\ClassifierBootstrapper\bin\x64\Release\*.zip
+  name: Classifier
+deploy:
+- provider: GitHub
+  release: pre-$(appveyor_build_version)
+  auth_token:
+    secure: TUYLMEdINLR4koMU97j4A0uNGFht7f3T/eVBOsK6Pj51CqHx8i6E4ZftjoIz0xDW
+  artifact: Classifier
+  prerelease: true
 notifications:
 - provider: Email
   to:
