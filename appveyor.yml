@@ -15,7 +15,7 @@ before_build:
 - ps: >-
     nuget restore
 
-    foreach ($file in Get-ChildItem -Include *.wxs -Recurse) { (Get-Content $file.FullName) -replace '0.0.1.0', APPVEYOR_BUILD_VERSION | Out-File $file.FullName -Encoding utf8 }
+    foreach ($file in Get-ChildItem -Include *.wxs -Recurse) { (Get-Content $file.FullName) -replace '0.0.1.0', $env:APPVEYOR_BUILD_VERSION | Out-File $file.FullName -Encoding utf8 }
 build:
   verbosity: minimal
 notifications:
