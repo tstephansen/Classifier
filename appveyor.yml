@@ -21,7 +21,7 @@ build:
 after_build:
 - cmd: 7z a Classifier.zip Src\ClassifierBootstrapper\bin\x64\Release\*.exe
 artifacts:
-- path: Src\ClassifierBootstrapper\bin\x64\Release\*.zip
+- path: Classifier.zip
   name: Classifier
 deploy:
 - provider: GitHub
