@@ -11,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Data;
+using LogLevel = NLog.LogLevel;
 
 namespace Classifier.ViewModels
 {
@@ -155,14 +156,23 @@ namespace Classifier.ViewModels
                 {
                     foreach(var criteriaFile in _criteriaFilePaths)
                     {
-                        var score = 0L;
-                        using(var modelImage = CvInvoke.Imread(criteriaFile, Emgu.CV.CvEnum.ImreadModes.Grayscale))
+                        try
                         {
-                            using (var observedImage = CvInvoke.Imread(file.FullName))
+                            var score = 0L;
+                            using (var modelImage = CvInvoke.Imread(criteriaFile, Emgu.CV.CvEnum.ImreadModes.Grayscale))
                             {
-                                score = Classify(modelImage, observedImage);
-                                Console.WriteLine($"Score: {score}");
+                                using (var observedImage = CvInvoke.Imread(file.FullName))
+                                {
+                                    score = Classify(modelImage, observedImage);
+                                    Console.WriteLine($"Score: {score}");
+                                }
                             }
+                        }
+                        catch (Exception ex)
+                        {
+                            Common.Logger.Log(LogLevel.Error, ex);
+                            System.Windows.MessageBox.Show("Error loading CV Libs.");
+                            ClassifyEnabled = true;
                         }
                     }
                 }

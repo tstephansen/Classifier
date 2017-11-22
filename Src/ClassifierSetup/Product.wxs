@@ -217,6 +217,36 @@
             <Component Id="x64_vcruntime140.dll1" Guid="C5EBBA1A-F49F-4399-86B4-F2B5946CDCC4">
                 <File Id="x64_vcruntime140.dll1" Name="vcruntime140.dll" Source="$(var.Classifier_TargetDir)vcruntime140.dll" />
             </Component>
+            <Component Id="Microsoft.AI.ServerTelemetryChannel.dll" Guid="bb8ef817-3f4f-4829-8d29-e93bd3126511">
+              <File Id="Microsoft.AI.ServerTelemetryChannel.dll" Name="Microsoft.AI.ServerTelemetryChannel.dll" Source="$(var.Classifier_TargetDir)Microsoft.AI.ServerTelemetryChannel.dll" />
+            </Component>
+            <Component Id="Microsoft.AI.PerfCounterCollector.dll" Guid="41c23598-73e3-4d4c-8b7e-f3b33b2c6d0b">
+              <File Id="Microsoft.AI.PerfCounterCollector.dll" Name="Microsoft.AI.PerfCounterCollector.dll" Source="$(var.Classifier_TargetDir)Microsoft.AI.PerfCounterCollector.dll" />
+            </Component>
+            <Component Id="Microsoft.AI.DependencyCollector.dll" Guid="e3af1bf4-824e-4224-9c8a-081697bcc8a4">
+              <File Id="Microsoft.AI.DependencyCollector.dll" Name="Microsoft.AI.DependencyCollector.dll" Source="$(var.Classifier_TargetDir)Microsoft.AI.DependencyCollector.dll" />
+            </Component>
+            <Component Id="Microsoft.ApplicationInsights.dll" Guid="938b3174-48f3-490e-8ce2-71d912313707">
+              <File Id="Microsoft.ApplicationInsights.dll" Name="Microsoft.ApplicationInsights.dll" Source="$(var.Classifier_TargetDir)Microsoft.ApplicationInsights.dll" />
+            </Component>
+            <Component Id="System.Diagnostics.DiagnosticSource.dll" Guid="be1939d8-7eba-40fc-9732-4a0879157afb">
+              <File Id="System.Diagnostics.DiagnosticSource.dll" Name="System.Diagnostics.DiagnosticSource.dll" Source="$(var.Classifier_TargetDir)System.Diagnostics.DiagnosticSource.dll" />
+            </Component>
+            <Component Id="Microsoft.AI.Agent.Intercept.dll" Guid="a4533744-1a10-4bb3-b327-27926b6f3863">
+              <File Id="Microsoft.AI.Agent.Intercept.dll" Name="Microsoft.AI.Agent.Intercept.dll" Source="$(var.Classifier_TargetDir)Microsoft.AI.Agent.Intercept.dll" />
+            </Component>
+            <Component Id="Microsoft.HockeyApp.Kit.dll" Guid="72a79c7d-0096-4143-8dee-f8d8e1686308">
+              <File Id="Microsoft.HockeyApp.Kit.dll" Name="Microsoft.HockeyApp.Kit.dll" Source="$(var.Classifier_TargetDir)Microsoft.HockeyApp.Kit.dll" />
+            </Component>
+            <Component Id="Microsoft.HockeyApp.Core45.dll" Guid="a2949c8e-324e-47e6-9346-57da8426834c">
+              <File Id="Microsoft.HockeyApp.Core45.dll" Name="Microsoft.HockeyApp.Core45.dll" Source="$(var.Classifier_TargetDir)Microsoft.HockeyApp.Core45.dll" />
+            </Component>
+            <Component Id="Microsoft.AI.WindowsServer.dll" Guid="b9ae65b4-d1ac-4741-9381-d859243c3575">
+              <File Id="Microsoft.AI.WindowsServer.dll" Name="Microsoft.AI.WindowsServer.dll" Source="$(var.Classifier_TargetDir)Microsoft.AI.WindowsServer.dll" />
+            </Component>
+            <Component Id="LandmarkDevs.Core.Telemetry.dll" Guid="050404ad-c417-4c26-a25c-5c310e02733e">
+              <File Id="LandmarkDevs.Core.Telemetry.dll" Name="LandmarkDevs.Core.Telemetry.dll" Source="$(var.Classifier_TargetDir)LandmarkDevs.Core.Telemetry.dll" />
+            </Component>
         </ComponentGroup>
         
         <ComponentGroup Id="X64CV_files" Directory="X64CVDIR">
